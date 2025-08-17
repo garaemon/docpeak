@@ -19,6 +19,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
+  const [viewMode, setViewMode] = useState<'single' | 'all'>('all');
 
   const {hoveredWord} = useWordDetection();
   const {definition, loading, error, fetchDefinition, clearDefinition} =
@@ -59,6 +60,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
     setScale(1.0);
   }, []);
 
+  const toggleViewMode = useCallback(() => {
+    setViewMode(prev => (prev === 'single' ? 'all' : 'single'));
+    clearHighlights();
+  }, [clearHighlights]);
+
   useEffect(() => {
     if (hoveredWord) {
       void fetchDefinition(hoveredWord.word);
@@ -86,25 +92,33 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
   return (
     <div className={styles.container}>
       <div className={styles.controls}>
-        <button
-          onClick={goToPreviousPage}
-          disabled={pageNumber <= 1}
-          className={styles.navButton}
-        >
-          Previous
+        <button onClick={toggleViewMode} className={styles.viewModeButton}>
+          {viewMode === 'all' ? 'Show Single Page' : 'Show All Pages'}
         </button>
 
-        <span className={styles.pageInfo}>
-          Page {pageNumber} of {numPages}
-        </span>
+        {viewMode === 'single' && (
+          <>
+            <button
+              onClick={goToPreviousPage}
+              disabled={pageNumber <= 1}
+              className={styles.navButton}
+            >
+              Previous
+            </button>
 
-        <button
-          onClick={goToNextPage}
-          disabled={pageNumber >= numPages}
-          className={styles.navButton}
-        >
-          Next
-        </button>
+            <span className={styles.pageInfo}>
+              Page {pageNumber} of {numPages}
+            </span>
+
+            <button
+              onClick={goToNextPage}
+              disabled={pageNumber >= numPages}
+              className={styles.navButton}
+            >
+              Next
+            </button>
+          </>
+        )}
 
         <div className={styles.zoomControls}>
           <button onClick={zoomOut} className={styles.zoomButton}>
@@ -128,13 +142,32 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
           loading={<div className={styles.loading}>Loading PDF...</div>}
           error={<div className={styles.error}>Failed to load PDF</div>}
         >
-          <Page
-            pageNumber={pageNumber}
-            scale={scale}
-            renderTextLayer={true}
-            renderAnnotationLayer={false}
-            loading={<div className={styles.loading}>Loading page...</div>}
-          />
+          {viewMode === 'all' ? (
+            <div className={styles.allPagesContainer}>
+              {Array.from(new Array(numPages), (el, index) => (
+                <div key={`page_${index + 1}`} className={styles.pageWrapper}>
+                  <div className={styles.pageNumber}>Page {index + 1}</div>
+                  <Page
+                    pageNumber={index + 1}
+                    scale={scale}
+                    renderTextLayer={true}
+                    renderAnnotationLayer={false}
+                    loading={
+                      <div className={styles.loading}>Loading page...</div>
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Page
+              pageNumber={pageNumber}
+              scale={scale}
+              renderTextLayer={true}
+              renderAnnotationLayer={false}
+              loading={<div className={styles.loading}>Loading page...</div>}
+            />
+          )}
         </Document>
       </div>
 
