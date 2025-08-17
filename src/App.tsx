@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, {useState, useCallback} from 'react';
 import PDFViewer from './components/PDFViewer';
 import FileUploader from './components/FileUploader';
 import './App.css';

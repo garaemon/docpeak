@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
+import React, {useState, useCallback} from 'react';
+import {Document, Page, pdfjs} from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import styles from './PDFViewer.module.css';
@@ -11,15 +11,18 @@ interface PDFViewerProps {
   fileUrl: string | null;
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
 
-  const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
-    setPageNumber(1);
-  }, []);
+  const onDocumentLoadSuccess = useCallback(
+    ({numPages}: {numPages: number}) => {
+      setNumPages(numPages);
+      setPageNumber(1);
+    },
+    [],
+  );
 
   const onDocumentLoadError = useCallback((error: Error) => {
     console.error('Error loading PDF:', error);
@@ -32,7 +35,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl }) => {
   const goToNextPage = useCallback(() => {
     setPageNumber(prev => Math.min(prev + 1, numPages));
   }, [numPages]);
-
 
   const zoomIn = useCallback(() => {
     setScale(prev => Math.min(prev + 0.1, 3.0));
@@ -57,31 +59,37 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl }) => {
   return (
     <div className={styles.container}>
       <div className={styles.controls}>
-        <button 
-          onClick={goToPreviousPage} 
+        <button
+          onClick={goToPreviousPage}
           disabled={pageNumber <= 1}
           className={styles.navButton}
         >
           Previous
         </button>
-        
+
         <span className={styles.pageInfo}>
           Page {pageNumber} of {numPages}
         </span>
-        
-        <button 
-          onClick={goToNextPage} 
+
+        <button
+          onClick={goToNextPage}
           disabled={pageNumber >= numPages}
           className={styles.navButton}
         >
           Next
         </button>
-        
+
         <div className={styles.zoomControls}>
-          <button onClick={zoomOut} className={styles.zoomButton}>-</button>
+          <button onClick={zoomOut} className={styles.zoomButton}>
+            -
+          </button>
           <span className={styles.zoomLevel}>{Math.round(scale * 100)}%</span>
-          <button onClick={zoomIn} className={styles.zoomButton}>+</button>
-          <button onClick={resetZoom} className={styles.resetButton}>Reset</button>
+          <button onClick={zoomIn} className={styles.zoomButton}>
+            +
+          </button>
+          <button onClick={resetZoom} className={styles.resetButton}>
+            Reset
+          </button>
         </div>
       </div>
 
@@ -93,8 +101,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl }) => {
           loading={<div className={styles.loading}>Loading PDF...</div>}
           error={<div className={styles.error}>Failed to load PDF</div>}
         >
-          <Page 
-            pageNumber={pageNumber} 
+          <Page
+            pageNumber={pageNumber}
             scale={scale}
             renderTextLayer={false}
             renderAnnotationLayer={false}
