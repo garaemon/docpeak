@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  margin-right: 320px; /* Make space for sidebar */
   background-color: #f5f5f5;
 }
 
@@ -125,6 +126,64 @@
   padding: 2rem;
   color: #dc3545;
   font-size: 1.1rem;
+}
+
+/* Word highlighting */
+.highlight {
+  background-color: rgba(255, 235, 59, 0.4) !important;
+  border-radius: 3px !important;
+  transition: background-color 0.2s ease !important;
+  z-index: 3 !important;
+  position: absolute !important;
+}
+
+.highlightActive {
+  background-color: rgba(255, 193, 7, 0.5) !important;
+  border-radius: 3px !important;
+  z-index: 3 !important;
+  position: absolute !important;
+}
+
+/* PDF page container styling */
+:global(.react-pdf__Page) {
+  position: relative !important;
+}
+
+/* PDF text layer styling */
+:global(.react-pdf__Page__textContent) {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 2 !important;
+  pointer-events: auto !important;
+}
+
+:global(.react-pdf__Page__textContent span) {
+  cursor: pointer !important;
+  user-select: none !important;
+  position: absolute !important;
+  transform-origin: 0% 0% !important;
+  pointer-events: auto !important;
+}
+
+
+/* PDF canvas (background) styling */
+:global(.react-pdf__Page__canvas) {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* PDF annotation layer styling */
+:global(.react-pdf__Page__annotations) {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 1 !important;
+  pointer-events: none !important;
 }
 
 /* Responsive design */

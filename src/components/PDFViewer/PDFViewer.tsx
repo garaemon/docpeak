@@ -1,7 +1,11 @@
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, useEffect} from 'react';
 import {Document, Page, pdfjs} from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
+import {useWordDetection} from '../../hooks/useWordDetection';
+import {useDictionary} from '../../hooks/useDictionary';
+import {useWordHighlight} from '../../hooks/useWordHighlight';
+import Sidebar from '../Sidebar';
 import styles from './PDFViewer.module.css';
 
 // Configure PDF.js worker - use local worker file that matches react-pdf version
@@ -15,6 +19,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
+
+  const {hoveredWord} = useWordDetection();
+  const {definition, loading, error, fetchDefinition, clearDefinition} =
+    useDictionary();
+  const {highlightWord, clearHighlights} = useWordHighlight();
 
   const onDocumentLoadSuccess = useCallback(
     ({numPages}: {numPages: number}) => {
@@ -30,11 +39,13 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
 
   const goToPreviousPage = useCallback(() => {
     setPageNumber(prev => Math.max(prev - 1, 1));
-  }, []);
+    clearHighlights();
+  }, [clearHighlights]);
 
   const goToNextPage = useCallback(() => {
     setPageNumber(prev => Math.min(prev + 1, numPages));
-  }, [numPages]);
+    clearHighlights();
+  }, [numPages, clearHighlights]);
 
   const zoomIn = useCallback(() => {
     setScale(prev => Math.min(prev + 0.1, 3.0));
@@ -47,6 +58,22 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
   const resetZoom = useCallback(() => {
     setScale(1.0);
   }, []);
+
+  useEffect(() => {
+    if (hoveredWord) {
+      void fetchDefinition(hoveredWord.word);
+      highlightWord(hoveredWord);
+    } else {
+      clearDefinition();
+      clearHighlights();
+    }
+  }, [
+    hoveredWord,
+    fetchDefinition,
+    clearDefinition,
+    highlightWord,
+    clearHighlights,
+  ]);
 
   if (!fileUrl) {
     return (
@@ -104,12 +131,19 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
           <Page
             pageNumber={pageNumber}
             scale={scale}
-            renderTextLayer={false}
+            renderTextLayer={true}
             renderAnnotationLayer={false}
             loading={<div className={styles.loading}>Loading page...</div>}
           />
         </Document>
       </div>
+
+      <Sidebar
+        definition={definition}
+        loading={loading}
+        error={error}
+        hoveredWord={hoveredWord?.word || null}
+      />
     </div>
   );
 };
