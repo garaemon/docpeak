@@ -77,11 +77,6 @@ export const useWordDetection = () => {
           : null) ||
         (target.tagName === 'SPAN' && target.textContent ? target : null);
 
-      // If we're still over the same element, don't recalculate word detection
-      if (textElement === currentElementRef.current && currentWordRef.current) {
-        return;
-      }
-
       // Clear any existing timeout
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
