@@ -20,6 +20,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
   const [viewMode, setViewMode] = useState<'single' | 'all'>('all');
+  const [containerWidth, setContainerWidth] = useState<number>(0);
 
   const {hoveredWord} = useWordDetection();
   const {definition, loading, error, fetchDefinition, clearDefinition} =
@@ -60,6 +61,16 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
     setScale(1.0);
   }, []);
 
+  const fitToWidth = useCallback(() => {
+    if (containerWidth > 0) {
+      // Estimate page width (typically 595 points for A4)
+      const pageWidth = 595;
+      const padding = 40; // Account for padding
+      const newScale = (containerWidth - padding) / pageWidth;
+      setScale(Math.max(0.5, Math.min(newScale, 3.0)));
+    }
+  }, [containerWidth]);
+
   const toggleViewMode = useCallback(() => {
     setViewMode(prev => (prev === 'single' ? 'all' : 'single'));
     clearHighlights();
@@ -80,6 +91,22 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
     highlightWord,
     clearHighlights,
   ]);
+
+  useEffect(() => {
+    const updateContainerWidth = () => {
+      const container = document.querySelector(`.${styles.documentContainer}`);
+      if (container) {
+        setContainerWidth(container.clientWidth);
+      }
+    };
+
+    updateContainerWidth();
+    window.addEventListener('resize', updateContainerWidth);
+
+    return () => {
+      window.removeEventListener('resize', updateContainerWidth);
+    };
+  }, []);
 
   if (!fileUrl) {
     return (
@@ -130,6 +157,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
           </button>
           <button onClick={resetZoom} className={styles.resetButton}>
             Reset
+          </button>
+          <button onClick={fitToWidth} className={styles.fitButton}>
+            Fit to Width
           </button>
         </div>
       </div>
