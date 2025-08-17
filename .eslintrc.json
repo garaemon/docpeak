@@ -1,0 +1,10 @@
+{
+  "extends": "./node_modules/gts/",
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "rules": {
+    "n/no-unsupported-features/node-builtins": "off"
+  }
+}
