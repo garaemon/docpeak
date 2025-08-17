@@ -5,6 +5,24 @@ export interface WordDefinition {
   partOfSpeech?: string;
 }
 
+interface DictionaryAPIDefinition {
+  definition: string;
+}
+
+interface DictionaryAPIMeaning {
+  partOfSpeech: string;
+  definitions: DictionaryAPIDefinition[];
+}
+
+interface DictionaryAPIPhonetic {
+  text: string;
+}
+
+interface DictionaryAPIEntry {
+  meanings: DictionaryAPIMeaning[];
+  phonetics: DictionaryAPIPhonetic[];
+}
+
 class DictionaryService {
   private cache = new Map<string, WordDefinition>();
 
@@ -27,19 +45,21 @@ class DictionaryService {
       const data = await response.json();
 
       if (Array.isArray(data) && data.length > 0) {
-        const entry = data[0];
+        const entry = data[0] as DictionaryAPIEntry;
         const definitions: string[] = [];
         let phonetics = '';
         let partOfSpeech = '';
 
         if (entry.meanings && Array.isArray(entry.meanings)) {
-          entry.meanings.forEach((meaning: any) => {
+          entry.meanings.forEach((meaning: DictionaryAPIMeaning) => {
             if (meaning.definitions && Array.isArray(meaning.definitions)) {
-              meaning.definitions.slice(0, 3).forEach((def: any) => {
-                if (def.definition) {
-                  definitions.push(def.definition);
-                }
-              });
+              meaning.definitions
+                .slice(0, 3)
+                .forEach((def: DictionaryAPIDefinition) => {
+                  if (def.definition) {
+                    definitions.push(def.definition);
+                  }
+                });
             }
             if (!partOfSpeech && meaning.partOfSpeech) {
               partOfSpeech = meaning.partOfSpeech;
@@ -48,7 +68,9 @@ class DictionaryService {
         }
 
         if (entry.phonetics && Array.isArray(entry.phonetics)) {
-          const phoneticEntry = entry.phonetics.find((p: any) => p.text);
+          const phoneticEntry = entry.phonetics.find(
+            (p: DictionaryAPIPhonetic) => p.text,
+          );
           if (phoneticEntry) {
             phonetics = phoneticEntry.text;
           }
