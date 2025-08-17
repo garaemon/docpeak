@@ -51,30 +51,6 @@ body {
   padding: 0;
 }
 
-/* Clean PDF display without text/annotation layers */
-.react-pdf__Document {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.react-pdf__Page {
-  position: relative !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: block !important;
-}
-
-.react-pdf__Page__canvas {
-  display: block !important;
-  max-width: 100% !important;
-  height: auto !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
 /* Responsive design */
 @media (max-width: 768px) {
   .app-header {
@@ -82,11 +58,11 @@ body {
     gap: 0.5rem;
     padding: 1rem;
   }
-  
+
   .app-header h1 {
     font-size: 1.25rem;
   }
-  
+
   .app-header p {
     font-size: 0.9rem;
   }
