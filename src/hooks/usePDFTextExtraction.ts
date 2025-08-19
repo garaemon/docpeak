@@ -1,11 +1,19 @@
 import {useState, useEffect, useCallback} from 'react';
 import {pdfjs} from 'react-pdf';
+import type {PDFDocumentProxy} from 'pdfjs-dist';
 
 interface PDFTextContent {
   pageText: string;
   allText: string;
   isLoading: boolean;
   error: string | null;
+}
+
+interface TextItem {
+  str: string;
+  transform: number[];
+  width: number;
+  height: number;
 }
 
 export const usePDFTextExtraction = (
@@ -22,15 +30,18 @@ export const usePDFTextExtraction = (
   const extractTextFromPage = useCallback(
     async (pdfDocument: unknown, pageNumber: number): Promise<string> => {
       try {
-        const page = await (pdfDocument as any).getPage(pageNumber);
+        const page = await (pdfDocument as PDFDocumentProxy).getPage(
+          pageNumber,
+        );
         const textContent = await page.getTextContent();
 
         const textItems = textContent.items;
         let pageText = '';
 
-        textItems.forEach((item: any) => {
-          if (item.str) {
-            pageText += item.str + ' ';
+        textItems.forEach(item => {
+          if ('str' in item) {
+            const textItem = item as TextItem;
+            pageText += textItem.str + ' ';
           }
         });
 
@@ -45,7 +56,7 @@ export const usePDFTextExtraction = (
 
   const extractAllText = useCallback(
     async (pdfDocument: unknown): Promise<string> => {
-      const numPages = (pdfDocument as any).numPages;
+      const numPages = (pdfDocument as PDFDocumentProxy).numPages;
       let allText = '';
 
       for (let i = 1; i <= numPages; i++) {
