@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu } = require('electron');
+const {app, BrowserWindow, Menu} = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
 
@@ -41,7 +41,7 @@ function createWindow() {
             mainWindow.webContents.send('open-file-dialog');
           },
         },
-        { type: 'separator' },
+        {type: 'separator'},
         {
           label: 'Quit',
           accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
@@ -54,15 +54,15 @@ function createWindow() {
     {
       label: 'View',
       submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
-        { role: 'toggleDevTools' },
-        { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
-        { type: 'separator' },
-        { role: 'togglefullscreen' },
+        {role: 'reload'},
+        {role: 'forceReload'},
+        {role: 'toggleDevTools'},
+        {type: 'separator'},
+        {role: 'resetZoom'},
+        {role: 'zoomIn'},
+        {role: 'zoomOut'},
+        {type: 'separator'},
+        {role: 'togglefullscreen'},
       ],
     },
   ];
