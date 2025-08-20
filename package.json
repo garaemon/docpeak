@@ -35,7 +35,7 @@
     "prepare": "npm run compile",
     "pretest": "npm run compile",
     "posttest": "npm run lint",
-    "electron": "npm run build && electron public/electron.js",
+    "electron": "npm run build && NODE_ENV=production electron public/electron.js",
     "electron-dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && electron public/electron.js\"",
     "electron-pack": "electron-builder",
     "preelectron-pack": "npm run build"

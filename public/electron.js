@@ -1,6 +1,7 @@
 const {app, BrowserWindow, Menu} = require('electron');
 const path = require('path');
-const isDev = require('electron-is-dev');
+const isDev =
+  require('electron-is-dev') && process.env.NODE_ENV !== 'production';
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -10,7 +11,8 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false,
-      webSecurity: true,
+      webSecurity: false, // Disable web security for PDF.js worker to work
+      allowRunningInsecureContent: true,
     },
     icon: path.join(__dirname, 'favicon.ico'),
     show: false,

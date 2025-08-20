@@ -9,7 +9,15 @@ import Sidebar from '../Sidebar';
 import styles from './PDFViewer.module.css';
 
 // Configure PDF.js worker - use local worker file that matches react-pdf version
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+// Check if running in Electron and adjust path accordingly
+const isElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1;
+if (isElectron) {
+  // In Electron, use file protocol with absolute path
+  pdfjs.GlobalWorkerOptions.workerSrc = './pdf.worker.min.js';
+} else {
+  // In browser, use relative path
+  pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+}
 
 interface PDFViewerProps {
   fileUrl: string | null;
