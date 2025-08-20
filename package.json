@@ -12,6 +12,7 @@
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@types/react-pdf": "^6.2.0",
+    "electron-is-dev": "^3.0.1",
     "pdfjs-dist": "^5.4.54",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -33,7 +34,11 @@
     "fix": "gts fix",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
-    "posttest": "npm run lint"
+    "posttest": "npm run lint",
+    "electron": "npm run build && NODE_ENV=production electron public/electron.js",
+    "electron-dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && electron public/electron.js\"",
+    "electron-pack": "electron-builder",
+    "preelectron-pack": "npm run build"
   },
   "eslintConfig": {
     "extends": [
@@ -54,9 +59,36 @@
     ]
   },
   "devDependencies": {
+    "@types/node": "^22.7.5",
+    "concurrently": "^9.2.0",
     "copy-webpack-plugin": "^13.0.1",
+    "electron": "^37.3.1",
+    "electron-builder": "^26.0.12",
     "gts": "^6.0.2",
     "typescript": "~5.1.0",
-    "@types/node": "^22.7.5"
+    "wait-on": "^8.0.4"
+  },
+  "main": "public/electron.js",
+  "homepage": "./",
+  "build": {
+    "appId": "com.docpeak.app",
+    "productName": "DocPeak",
+    "directories": {
+      "buildResources": "assets"
+    },
+    "files": [
+      "build/**/*",
+      "public/electron.js",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "icon": "assets/icon.icns"
+    },
+    "win": {
+      "icon": "assets/icon.ico"
+    },
+    "linux": {
+      "icon": "assets/icon.png"
+    }
   }
 }
