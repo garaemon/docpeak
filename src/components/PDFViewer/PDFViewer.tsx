@@ -5,7 +5,10 @@ import 'react-pdf/dist/Page/TextLayer.css';
 import {useWordDetection} from '../../hooks/useWordDetection';
 import {useDictionary} from '../../hooks/useDictionary';
 import {useWordHighlight} from '../../hooks/useWordHighlight';
+import {usePDFTextExtraction} from '../../hooks/usePDFTextExtraction';
+import {useChat} from '../../hooks/useChat';
 import Sidebar from '../Sidebar';
+import SettingsModal from '../SettingsModal';
 import styles from './PDFViewer.module.css';
 
 // Configure PDF.js worker - use local worker file that matches react-pdf version
@@ -29,11 +32,26 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
   const [scale, setScale] = useState<number>(1.0);
   const [viewMode, setViewMode] = useState<'single' | 'all'>('all');
   const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   const {hoveredWord} = useWordDetection();
   const {definition, loading, error, fetchDefinition, clearDefinition} =
     useDictionary();
   const {highlightWord, clearHighlights} = useWordHighlight();
+
+  const {contextualText} = usePDFTextExtraction(
+    fileUrl,
+    viewMode === 'single' ? pageNumber : 1,
+  );
+
+  const {
+    messages: chatMessages,
+    isLoading: chatLoading,
+    error: chatError,
+    sendMessage: sendChatMessage,
+    clearChat,
+    clearError: clearChatError,
+  } = useChat();
 
   const onDocumentLoadSuccess = useCallback(
     ({numPages}: {numPages: number}) => {
@@ -114,6 +132,25 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
     return () => {
       window.removeEventListener('resize', updateContainerWidth);
     };
+  }, []);
+
+  const handleSendMessage = useCallback(
+    (message: string) => {
+      void sendChatMessage(message, contextualText);
+    },
+    [sendChatMessage, contextualText],
+  );
+
+  const handleOpenSettings = useCallback(() => {
+    setIsSettingsOpen(true);
+  }, []);
+
+  const handleCloseSettings = useCallback(() => {
+    setIsSettingsOpen(false);
+  }, []);
+
+  const handleSaveSettings = useCallback(() => {
+    // Settings are automatically saved in the modal
   }, []);
 
   if (!fileUrl) {
@@ -214,6 +251,19 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
         loading={loading}
         error={error}
         hoveredWord={hoveredWord?.word || null}
+        chatMessages={chatMessages}
+        chatLoading={chatLoading}
+        chatError={chatError}
+        onSendMessage={handleSendMessage}
+        onClearChat={clearChat}
+        onClearChatError={clearChatError}
+        onOpenSettings={handleOpenSettings}
+      />
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={handleCloseSettings}
+        onSave={handleSaveSettings}
       />
     </div>
   );
