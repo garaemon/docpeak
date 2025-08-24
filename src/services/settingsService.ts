@@ -39,6 +39,7 @@ class SettingsService {
         const parsed = JSON.parse(stored);
         return {
           geminiApiKey: parsed.geminiApiKey || '',
+          selectedModel: parsed.selectedModel || DEFAULT_GEMINI_MODEL.id,
         };
       }
     } catch (error) {
@@ -47,6 +48,7 @@ class SettingsService {
 
     return {
       geminiApiKey: '',
+      selectedModel: DEFAULT_GEMINI_MODEL.id,
     };
   }
 
