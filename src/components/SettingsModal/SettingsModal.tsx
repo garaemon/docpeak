@@ -24,6 +24,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     if (isOpen) {
       const currentSettings = settingsService.loadSettings();
       setApiKey(currentSettings.geminiApiKey);
+      setSelectedModel(currentSettings.selectedModel);
       setValidationError(null);
       setIsSaved(false);
     }
