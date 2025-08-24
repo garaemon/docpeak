@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {settingsService} from '../../services/settingsService';
+import {settingsService, AVAILABLE_GEMINI_MODELS} from '../../services/settingsService';
 import {geminiService} from '../../services/geminiService';
 import styles from './SettingsModal.module.css';
 
