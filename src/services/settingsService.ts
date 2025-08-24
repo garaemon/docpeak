@@ -1,5 +1,32 @@
+export interface GeminiModel {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export const AVAILABLE_GEMINI_MODELS: GeminiModel[] = [
+  {
+    id: 'gemini-1.5-flash',
+    name: 'Gemini 1.5 Flash',
+    description: 'Fast and efficient model for quick responses',
+  },
+  {
+    id: 'gemini-1.5-pro',
+    name: 'Gemini 1.5 Pro',
+    description: 'More capable model for complex tasks',
+  },
+  {
+    id: 'gemini-pro',
+    name: 'Gemini Pro',
+    description: 'Balanced performance and capability',
+  },
+];
+
+export const DEFAULT_GEMINI_MODEL = AVAILABLE_GEMINI_MODELS[0];
+
 export interface AppSettings {
   geminiApiKey: string;
+  selectedModel: string;
 }
 
 class SettingsService {
