@@ -79,6 +79,24 @@ class SettingsService {
     return apiKey.length > 0 && apiKey.startsWith('AIza');
   }
 
+  getSelectedModel(): string {
+    const settings = this.loadSettings();
+    return settings.selectedModel;
+  }
+
+  updateSelectedModel(modelId: string): void {
+    const currentSettings = this.loadSettings();
+    this.saveSettings({
+      ...currentSettings,
+      selectedModel: modelId,
+    });
+  }
+
+  getSelectedModelInfo(): GeminiModel {
+    const modelId = this.getSelectedModel();
+    return AVAILABLE_GEMINI_MODELS.find(model => model.id === modelId) || DEFAULT_GEMINI_MODEL;
+  }
+
   clearSettings(): void {
     localStorage.removeItem(this.storageKey);
   }
