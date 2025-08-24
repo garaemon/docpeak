@@ -131,6 +131,28 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
+          <div className={styles.formGroup}>
+            <label htmlFor="selectedModel" className={styles.label}>
+              AI Model
+            </label>
+            <select
+              id="selectedModel"
+              value={selectedModel}
+              onChange={e => setSelectedModel(e.target.value)}
+              className={styles.select}
+              disabled={isValidating}
+            >
+              {AVAILABLE_GEMINI_MODELS.map(model => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
+            </select>
+            <div className={styles.helpText}>
+              {AVAILABLE_GEMINI_MODELS.find(m => m.id === selectedModel)?.description}
+            </div>
+          </div>
+
           {validationError && (
             <div className={styles.errorMessage}>{validationError}</div>
           )}
