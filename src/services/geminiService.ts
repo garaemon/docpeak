@@ -56,7 +56,8 @@ class GeminiService {
   async sendMessage(message: string, pdfContext?: string): Promise<string> {
     try {
       const genAI = this.getInitializedClient();
-      const model = genAI.getGenerativeModel({model: 'gemini-1.5-flash'});
+      const selectedModelId = settingsService.getSelectedModel();
+      const model = genAI.getGenerativeModel({model: selectedModelId});
 
       let prompt = message;
       if (pdfContext) {
