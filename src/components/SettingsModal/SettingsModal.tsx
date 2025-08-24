@@ -55,6 +55,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       }
 
       settingsService.updateGeminiApiKey(apiKey.trim());
+      settingsService.updateSelectedModel(selectedModel);
       setIsSaved(true);
 
       setTimeout(() => {
