@@ -94,7 +94,10 @@ class SettingsService {
 
   getSelectedModelInfo(): GeminiModel {
     const modelId = this.getSelectedModel();
-    return AVAILABLE_GEMINI_MODELS.find(model => model.id === modelId) || DEFAULT_GEMINI_MODEL;
+    return (
+      AVAILABLE_GEMINI_MODELS.find(model => model.id === modelId) ||
+      DEFAULT_GEMINI_MODEL
+    );
   }
 
   clearSettings(): void {

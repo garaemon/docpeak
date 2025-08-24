@@ -1,5 +1,8 @@
 import React, {useState, useEffect} from 'react';
-import {settingsService, AVAILABLE_GEMINI_MODELS} from '../../services/settingsService';
+import {
+  settingsService,
+  AVAILABLE_GEMINI_MODELS,
+} from '../../services/settingsService';
 import {geminiService} from '../../services/geminiService';
 import styles from './SettingsModal.module.css';
 
@@ -149,7 +152,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               ))}
             </select>
             <div className={styles.helpText}>
-              {AVAILABLE_GEMINI_MODELS.find(m => m.id === selectedModel)?.description}
+              {
+                AVAILABLE_GEMINI_MODELS.find(m => m.id === selectedModel)
+                  ?.description
+              }
             </div>
           </div>
 
