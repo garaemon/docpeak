@@ -6,19 +6,14 @@ export interface GeminiModel {
 
 export const AVAILABLE_GEMINI_MODELS: GeminiModel[] = [
   {
-    id: 'gemini-1.5-flash',
-    name: 'Gemini 1.5 Flash',
-    description: 'Fast and efficient model for quick responses',
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    description: 'Fast and efficient model with improved performance',
   },
   {
-    id: 'gemini-1.5-pro',
-    name: 'Gemini 1.5 Pro',
-    description: 'More capable model for complex tasks',
-  },
-  {
-    id: 'gemini-pro',
-    name: 'Gemini Pro',
-    description: 'Balanced performance and capability',
+    id: 'gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro',
+    description: 'Most capable model for complex reasoning tasks',
   },
 ];
 
