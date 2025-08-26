@@ -1,5 +1,27 @@
+export interface GeminiModel {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export const AVAILABLE_GEMINI_MODELS: GeminiModel[] = [
+  {
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    description: 'Fast and efficient model with improved performance',
+  },
+  {
+    id: 'gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro',
+    description: 'Most capable model for complex reasoning tasks',
+  },
+];
+
+export const DEFAULT_GEMINI_MODEL = AVAILABLE_GEMINI_MODELS[0];
+
 export interface AppSettings {
   geminiApiKey: string;
+  selectedModel: string;
 }
 
 class SettingsService {
@@ -12,6 +34,7 @@ class SettingsService {
         const parsed = JSON.parse(stored);
         return {
           geminiApiKey: parsed.geminiApiKey || '',
+          selectedModel: parsed.selectedModel || DEFAULT_GEMINI_MODEL.id,
         };
       }
     } catch (error) {
@@ -20,6 +43,7 @@ class SettingsService {
 
     return {
       geminiApiKey: '',
+      selectedModel: DEFAULT_GEMINI_MODEL.id,
     };
   }
 
@@ -48,6 +72,27 @@ class SettingsService {
   hasValidGeminiApiKey(): boolean {
     const apiKey = this.getGeminiApiKey();
     return apiKey.length > 0 && apiKey.startsWith('AIza');
+  }
+
+  getSelectedModel(): string {
+    const settings = this.loadSettings();
+    return settings.selectedModel;
+  }
+
+  updateSelectedModel(modelId: string): void {
+    const currentSettings = this.loadSettings();
+    this.saveSettings({
+      ...currentSettings,
+      selectedModel: modelId,
+    });
+  }
+
+  getSelectedModelInfo(): GeminiModel {
+    const modelId = this.getSelectedModel();
+    return (
+      AVAILABLE_GEMINI_MODELS.find(model => model.id === modelId) ||
+      DEFAULT_GEMINI_MODEL
+    );
   }
 
   clearSettings(): void {

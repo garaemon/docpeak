@@ -1,5 +1,8 @@
 import React, {useState, useEffect} from 'react';
-import {settingsService} from '../../services/settingsService';
+import {
+  settingsService,
+  AVAILABLE_GEMINI_MODELS,
+} from '../../services/settingsService';
 import {geminiService} from '../../services/geminiService';
 import styles from './SettingsModal.module.css';
 
@@ -15,6 +18,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onSave,
 }) => {
   const [apiKey, setApiKey] = useState('');
+  const [selectedModel, setSelectedModel] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
@@ -23,6 +27,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     if (isOpen) {
       const currentSettings = settingsService.loadSettings();
       setApiKey(currentSettings.geminiApiKey);
+      setSelectedModel(currentSettings.selectedModel);
       setValidationError(null);
       setIsSaved(false);
     }
@@ -53,6 +58,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       }
 
       settingsService.updateGeminiApiKey(apiKey.trim());
+      settingsService.updateSelectedModel(selectedModel);
       setIsSaved(true);
 
       setTimeout(() => {
@@ -125,6 +131,31 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               >
                 Google AI Studio
               </a>
+            </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="selectedModel" className={styles.label}>
+              AI Model
+            </label>
+            <select
+              id="selectedModel"
+              value={selectedModel}
+              onChange={e => setSelectedModel(e.target.value)}
+              className={styles.select}
+              disabled={isValidating}
+            >
+              {AVAILABLE_GEMINI_MODELS.map(model => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
+            </select>
+            <div className={styles.helpText}>
+              {
+                AVAILABLE_GEMINI_MODELS.find(m => m.id === selectedModel)
+                  ?.description
+              }
             </div>
           </div>
 
