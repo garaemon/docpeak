@@ -140,12 +140,18 @@ class SettingsService {
 
   updateProviderType(providerType: ProviderType): void {
     const currentSettings = this.loadSettings();
-    const defaultModel =
-      providerType === 'gemini' ? DEFAULT_GEMINI_MODEL : DEFAULT_OLLAMA_MODEL;
+
+    console.log('updateProviderType called:', {
+      newProviderType: providerType,
+      currentSettings,
+    });
+
+    // Don't automatically change the selected model when switching providers
+    // Let the UI handle model selection based on available models
     this.saveSettings({
       ...currentSettings,
       providerType,
-      selectedModel: defaultModel.id,
+      // Keep the current selectedModel, the UI will update it if needed
     });
   }
 

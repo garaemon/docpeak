@@ -38,6 +38,8 @@ export const useChat = (): UseChatReturn => {
 
       try {
         const providerType = settingsService.getProviderType();
+        console.log('useChat: Provider type:', providerType);
+
         let response: string;
 
         if (providerType === 'gemini') {
@@ -48,6 +50,15 @@ export const useChat = (): UseChatReturn => {
         } else {
           const selectedModel = settingsService.getSelectedModel();
           const ollamaEndpoint = settingsService.getOllamaEndpoint();
+          const allSettings = settingsService.loadSettings();
+
+          console.log('useChat: Ollama settings:', {
+            selectedModel,
+            ollamaEndpoint,
+            providerType,
+            allSettings,
+          });
+
           ollamaService.setEndpoint(ollamaEndpoint);
           response = await ollamaService.sendMessage(
             message.trim(),

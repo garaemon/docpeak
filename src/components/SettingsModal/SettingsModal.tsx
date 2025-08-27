@@ -34,6 +34,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     try {
       const models =
         await settingsService.getAvailableModelsForProviderAsync(provider);
+
+      console.log('loadModelsForProvider:', {
+        provider,
+        models,
+        modelsLength: models.length,
+      });
+
       setAvailableModels(models);
 
       // Set the first model as selected if no current selection or if switching providers
@@ -41,7 +48,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       const currentModelExists = models.find(
         m => m.id === currentSettings.selectedModel,
       );
+
+      console.log('Model selection logic:', {
+        currentSelectedModel: currentSettings.selectedModel,
+        currentModelExists: !!currentModelExists,
+        firstAvailableModel: models[0]?.id,
+      });
+
       if (!currentModelExists && models.length > 0) {
+        console.log('Setting model to first available:', models[0].id);
         setSelectedModel(models[0].id);
       }
     } catch (error) {
@@ -49,6 +64,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       // Use fallback models
       const fallbackModels =
         settingsService.getAvailableModelsForProvider(provider);
+      console.log('Using fallback models:', fallbackModels);
       setAvailableModels(fallbackModels);
       if (fallbackModels.length > 0) {
         setSelectedModel(fallbackModels[0].id);
@@ -135,8 +151,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         settingsService.updateOllamaEndpoint(ollamaEndpoint.trim());
       }
 
-      settingsService.updateSelectedModel(selectedModel);
+      console.log('Saving settings:', {
+        providerType,
+        selectedModel,
+        ollamaEndpoint:
+          providerType === 'ollama' ? ollamaEndpoint.trim() : 'N/A',
+      });
+
+      // Update provider first, then model
       settingsService.updateProviderType(providerType);
+      settingsService.updateSelectedModel(selectedModel);
+
+      const savedSettings = settingsService.loadSettings();
+      console.log('Settings after save:', savedSettings);
+
       setIsSaved(true);
 
       setTimeout(() => {
