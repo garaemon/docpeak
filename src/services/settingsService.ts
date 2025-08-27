@@ -22,7 +22,8 @@ export const AVAILABLE_GEMINI_MODELS: Model[] = [
   },
 ];
 
-export const AVAILABLE_OLLAMA_MODELS: Model[] = [
+// Fallback models in case Ollama server is not reachable
+export const FALLBACK_OLLAMA_MODELS: Model[] = [
   {
     id: 'llama3:latest',
     name: 'Llama 3 (Latest)',
@@ -44,13 +45,8 @@ export const AVAILABLE_OLLAMA_MODELS: Model[] = [
   },
 ];
 
-export const ALL_AVAILABLE_MODELS = [
-  ...AVAILABLE_GEMINI_MODELS,
-  ...AVAILABLE_OLLAMA_MODELS,
-];
-
 export const DEFAULT_GEMINI_MODEL = AVAILABLE_GEMINI_MODELS[0];
-export const DEFAULT_OLLAMA_MODEL = AVAILABLE_OLLAMA_MODELS[0];
+export const DEFAULT_OLLAMA_MODEL = FALLBACK_OLLAMA_MODELS[0];
 
 export interface AppSettings {
   geminiApiKey: string;
@@ -61,6 +57,9 @@ export interface AppSettings {
 
 class SettingsService {
   private readonly storageKey = 'docpeak_settings';
+  private cachedOllamaModels: Model[] | null = null;
+  private lastOllamaFetch = 0;
+  private readonly cacheTimeout = 5 * 60 * 1000; // 5 minutes
 
   loadSettings(): AppSettings {
     try {
@@ -120,7 +119,13 @@ class SettingsService {
 
   updateSelectedModel(modelId: string): void {
     const currentSettings = this.loadSettings();
-    const model = ALL_AVAILABLE_MODELS.find(m => m.id === modelId);
+    // Find the model in either Gemini models or cached Ollama models
+    const geminiModel = AVAILABLE_GEMINI_MODELS.find(m => m.id === modelId);
+    const ollamaModel =
+      this.cachedOllamaModels?.find(m => m.id === modelId) ||
+      FALLBACK_OLLAMA_MODELS.find(m => m.id === modelId);
+    const model = geminiModel || ollamaModel;
+
     this.saveSettings({
       ...currentSettings,
       selectedModel: modelId,
@@ -159,14 +164,125 @@ class SettingsService {
 
   getSelectedModelInfo(): Model {
     const modelId = this.getSelectedModel();
+    const providerType = this.getProviderType();
+
+    // Check Gemini models
+    const geminiModel = AVAILABLE_GEMINI_MODELS.find(
+      model => model.id === modelId,
+    );
+    if (geminiModel) return geminiModel;
+
+    // Check cached Ollama models
+    const ollamaModel = this.cachedOllamaModels?.find(
+      model => model.id === modelId,
+    );
+    if (ollamaModel) return ollamaModel;
+
+    // Check fallback Ollama models
+    const fallbackModel = FALLBACK_OLLAMA_MODELS.find(
+      model => model.id === modelId,
+    );
+    if (fallbackModel) return fallbackModel;
+
+    // Return default based on provider type
+    return providerType === 'gemini'
+      ? DEFAULT_GEMINI_MODEL
+      : DEFAULT_OLLAMA_MODEL;
+  }
+
+  async getSelectedModelInfoAsync(): Promise<Model> {
+    const modelId = this.getSelectedModel();
+    const providerType = this.getProviderType();
+
+    if (providerType === 'gemini') {
+      return (
+        AVAILABLE_GEMINI_MODELS.find(model => model.id === modelId) ||
+        DEFAULT_GEMINI_MODEL
+      );
+    }
+
+    const ollamaModels = await this.getOllamaModels();
     return (
-      ALL_AVAILABLE_MODELS.find(model => model.id === modelId) ||
-      DEFAULT_GEMINI_MODEL
+      ollamaModels.find(model => model.id === modelId) ||
+      ollamaModels[0] ||
+      DEFAULT_OLLAMA_MODEL
     );
   }
 
+  async getOllamaModels(): Promise<Model[]> {
+    const now = Date.now();
+
+    // Return cached models if they're still fresh
+    if (
+      this.cachedOllamaModels &&
+      now - this.lastOllamaFetch < this.cacheTimeout
+    ) {
+      return this.cachedOllamaModels;
+    }
+
+    try {
+      // Dynamically import ollamaService to avoid circular dependencies
+      const {ollamaService} = await import('./ollamaService');
+
+      const endpoint = this.getOllamaEndpoint();
+      ollamaService.setEndpoint(endpoint);
+
+      const modelNames = await ollamaService.listModels();
+
+      const dynamicModels: Model[] = modelNames.map(modelName => ({
+        id: modelName,
+        name: this.formatModelName(modelName),
+        description: `Ollama model: ${modelName}`,
+        provider: 'ollama' as const,
+      }));
+
+      // Cache the results
+      this.cachedOllamaModels = dynamicModels;
+      this.lastOllamaFetch = now;
+
+      return dynamicModels;
+    } catch (error) {
+      console.warn('Failed to fetch Ollama models, using fallbacks:', error);
+      // Return fallback models if fetching fails
+      return FALLBACK_OLLAMA_MODELS;
+    }
+  }
+
+  private formatModelName(modelId: string): string {
+    // Convert model IDs like "llama3:latest" to "Llama 3 (Latest)"
+    const parts = modelId.split(':');
+    const modelName = parts[0];
+    const tag = parts[1] || 'latest';
+
+    // Capitalize and format common model names
+    const formatted = modelName
+      .replace(/llama(\d+)/i, 'Llama $1')
+      .replace(/mistral/i, 'Mistral')
+      .replace(/codellama/i, 'Code Llama')
+      .replace(/phi/i, 'Phi')
+      .replace(/qwen/i, 'Qwen')
+      .replace(/gemma/i, 'Gemma');
+
+    return tag === 'latest' ? `${formatted} (Latest)` : `${formatted} (${tag})`;
+  }
+
   getAvailableModelsForProvider(provider: ProviderType): Model[] {
-    return ALL_AVAILABLE_MODELS.filter(model => model.provider === provider);
+    if (provider === 'gemini') {
+      return AVAILABLE_GEMINI_MODELS;
+    }
+
+    // For Ollama, return cached models or fallback models
+    return this.cachedOllamaModels || FALLBACK_OLLAMA_MODELS;
+  }
+
+  async getAvailableModelsForProviderAsync(
+    provider: ProviderType,
+  ): Promise<Model[]> {
+    if (provider === 'gemini') {
+      return AVAILABLE_GEMINI_MODELS;
+    }
+
+    return await this.getOllamaModels();
   }
 
   clearSettings(): void {

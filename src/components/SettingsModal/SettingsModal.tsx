@@ -1,9 +1,8 @@
 import React, {useState, useEffect} from 'react';
 import {
   settingsService,
-  AVAILABLE_GEMINI_MODELS,
-  AVAILABLE_OLLAMA_MODELS,
   ProviderType,
+  Model,
 } from '../../services/settingsService';
 import {geminiService} from '../../services/geminiService';
 import {ollamaService} from '../../services/ollamaService';
@@ -24,9 +23,40 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   const [selectedModel, setSelectedModel] = useState('');
   const [providerType, setProviderType] = useState<ProviderType>('gemini');
   const [ollamaEndpoint, setOllamaEndpoint] = useState('');
+  const [availableModels, setAvailableModels] = useState<Model[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+
+  const loadModelsForProvider = async (provider: ProviderType) => {
+    setIsLoadingModels(true);
+    try {
+      const models =
+        await settingsService.getAvailableModelsForProviderAsync(provider);
+      setAvailableModels(models);
+
+      // Set the first model as selected if no current selection or if switching providers
+      const currentSettings = settingsService.loadSettings();
+      const currentModelExists = models.find(
+        m => m.id === currentSettings.selectedModel,
+      );
+      if (!currentModelExists && models.length > 0) {
+        setSelectedModel(models[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to load models:', error);
+      // Use fallback models
+      const fallbackModels =
+        settingsService.getAvailableModelsForProvider(provider);
+      setAvailableModels(fallbackModels);
+      if (fallbackModels.length > 0) {
+        setSelectedModel(fallbackModels[0].id);
+      }
+    } finally {
+      setIsLoadingModels(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -37,17 +67,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       setOllamaEndpoint(currentSettings.ollamaEndpoint);
       setValidationError(null);
       setIsSaved(false);
+
+      // Load models for the current provider
+      void loadModelsForProvider(currentSettings.providerType);
     }
   }, [isOpen]);
 
   const handleProviderChange = (newProvider: ProviderType) => {
     setProviderType(newProvider);
-    const availableModels =
-      settingsService.getAvailableModelsForProvider(newProvider);
-    if (availableModels.length > 0) {
-      setSelectedModel(availableModels[0].id);
-    }
     setValidationError(null);
+    void loadModelsForProvider(newProvider);
   };
 
   const handleSave = async () => {
@@ -237,32 +266,50 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           )}
 
           <div className={styles.formGroup}>
-            <label htmlFor="selectedModel" className={styles.label}>
-              AI Model
-            </label>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <label htmlFor="selectedModel" className={styles.label}>
+                AI Model
+              </label>
+              {providerType === 'ollama' && (
+                <button
+                  type="button"
+                  onClick={() => loadModelsForProvider('ollama')}
+                  disabled={isLoadingModels || isValidating}
+                  className={styles.refreshButton}
+                  title="Refresh model list"
+                >
+                  {isLoadingModels ? '⟳' : '↻'}
+                </button>
+              )}
+            </div>
             <select
               id="selectedModel"
               value={selectedModel}
               onChange={e => setSelectedModel(e.target.value)}
               className={styles.select}
-              disabled={isValidating}
+              disabled={isValidating || isLoadingModels}
             >
-              {(providerType === 'gemini'
-                ? AVAILABLE_GEMINI_MODELS
-                : AVAILABLE_OLLAMA_MODELS
-              ).map(model => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                </option>
-              ))}
+              {isLoadingModels ? (
+                <option value="">Loading models...</option>
+              ) : (
+                availableModels.map(model => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))
+              )}
             </select>
             <div className={styles.helpText}>
-              {
-                (providerType === 'gemini'
-                  ? AVAILABLE_GEMINI_MODELS
-                  : AVAILABLE_OLLAMA_MODELS
-                ).find(m => m.id === selectedModel)?.description
-              }
+              {isLoadingModels
+                ? 'Loading available models...'
+                : availableModels.find(m => m.id === selectedModel)
+                    ?.description || 'No description available'}
             </div>
           </div>
 
