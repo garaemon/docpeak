@@ -127,12 +127,12 @@ class OllamaService {
           return await this.sendChatMessage(endpoint, model, prompt);
         } catch (chatError) {
           // If both endpoints fail, use error handling
-          this.handleOllamaError(chatError, model);
+          return await this.handleOllamaError(chatError, model);
         }
       }
 
       // Handle other errors
-      this.handleOllamaError(error, model);
+      return await this.handleOllamaError(error, model);
     }
   }
 
@@ -273,7 +273,10 @@ class OllamaService {
     }
   }
 
-  private handleOllamaError(error: unknown, model: string): never {
+  private async handleOllamaError(
+    error: unknown,
+    model: string,
+  ): Promise<never> {
     console.error('Detailed Ollama API error:', {
       error,
       model,
@@ -290,8 +293,24 @@ class OllamaService {
       (err.message?.toLowerCase().includes('not found') ||
         err.message?.toLowerCase().includes('not available'))
     ) {
+      // Try to get available models to help user
+      let availableModelsMessage = '';
+      try {
+        const availableModels = await this.listModels();
+        if (availableModels.length > 0) {
+          availableModelsMessage = ` Available models: ${availableModels.join(', ')}`;
+        } else {
+          availableModelsMessage =
+            ' No models are currently installed. Please install a model first using "ollama pull <model-name>".';
+        }
+      } catch (listError) {
+        console.warn('Could not fetch available models:', listError);
+        availableModelsMessage =
+          ' Could not fetch available models. Please check your Ollama installation.';
+      }
+
       throw new OllamaError({
-        message: `Model "${model}" not found. Please ensure the model is installed in Ollama. Error: ${err.message}`,
+        message: `Model "${model}" not found. Please ensure the model is installed in Ollama.${availableModelsMessage} Error: ${err.message}`,
         type: 'model_not_found',
       });
     }

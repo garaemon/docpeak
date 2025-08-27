@@ -261,6 +261,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 >
                   ollama.ai
                 </a>
+                {
+                  '. After installation, download models with: ollama pull llama3.2'
+                }
               </div>
             </div>
           )}
@@ -308,8 +311,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className={styles.helpText}>
               {isLoadingModels
                 ? 'Loading available models...'
-                : availableModels.find(m => m.id === selectedModel)
-                    ?.description || 'No description available'}
+                : availableModels.length === 0 && providerType === 'ollama'
+                  ? 'No models found. Install models using: ollama pull llama3.2'
+                  : availableModels.find(m => m.id === selectedModel)
+                      ?.description || 'No description available'}
             </div>
           </div>
 
