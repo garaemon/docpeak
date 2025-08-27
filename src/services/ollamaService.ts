@@ -70,7 +70,8 @@ class OllamaService {
       const data = await response.json();
       console.log('Models data received:', data);
 
-      const models = data.models?.map((model: any) => model.name) || [];
+      const models =
+        data.models?.map((model: {name: string}) => model.name) || [];
       console.log('Extracted model names:', models);
 
       return models;

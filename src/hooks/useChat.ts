@@ -82,7 +82,7 @@ export const useChat = (): UseChatReturn => {
 
           if (
             errorWithType instanceof GeminiError ||
-            (errorWithType as any).name === 'GeminiError'
+            (errorWithType as {name?: string}).name === 'GeminiError'
           ) {
             const geminiError = errorWithType as GeminiError;
             switch (geminiError.type) {
@@ -101,7 +101,7 @@ export const useChat = (): UseChatReturn => {
             }
           } else if (
             errorWithType instanceof OllamaError ||
-            (errorWithType as any).name === 'OllamaError'
+            (errorWithType as {name?: string}).name === 'OllamaError'
           ) {
             const ollamaError = errorWithType as OllamaError;
             switch (ollamaError.type) {
