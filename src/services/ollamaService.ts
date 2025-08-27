@@ -48,31 +48,54 @@ class OllamaService {
   async listModels(): Promise<string[]> {
     try {
       const endpoint = this.getEndpoint();
+
+      console.log('Fetching Ollama models from:', `${endpoint}/api/tags`);
+
       const response = await fetch(`${endpoint}/api/tags`);
 
+      console.log('List models response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('List models error response:', errorText);
+        throw new Error(
+          `HTTP ${response.status}: ${response.statusText} - ${errorText}`,
+        );
       }
 
       const data = await response.json();
-      return data.models?.map((model: any) => model.name) || [];
+      console.log('Models data received:', data);
+
+      const models = data.models?.map((model: any) => model.name) || [];
+      console.log('Extracted model names:', models);
+
+      return models;
     } catch (error: unknown) {
-      console.error('Error listing Ollama models:', error);
+      console.error('Error listing Ollama models:', {
+        error,
+        errorType: typeof error,
+        errorString: String(error),
+      });
 
       const err = error as Error;
       if (
         err.message?.includes('NetworkError') ||
-        err.message?.includes('Failed to fetch')
+        err.message?.includes('Failed to fetch') ||
+        err.message?.includes('ECONNREFUSED') ||
+        err.message?.includes('ENOTFOUND')
       ) {
         throw new OllamaError({
-          message:
-            'Cannot connect to Ollama. Please check if Ollama is running and the endpoint is correct.',
+          message: `Cannot connect to Ollama server. Please check if Ollama is running and the endpoint is correct. Error: ${err.message}`,
           type: 'network_error',
         });
       }
 
       throw new OllamaError({
-        message: err.message || 'Failed to list models from Ollama',
+        message: `Failed to list models from Ollama: ${err.message || 'Unknown error'}`,
         type: 'api_error',
       });
     }
@@ -124,25 +147,51 @@ class OllamaService {
       stream: false,
     };
 
-    const response = await fetch(`${endpoint}/api/generate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
+    console.log('Attempting Ollama /api/generate request:', {
+      endpoint: `${endpoint}/api/generate`,
+      model,
+      requestBody,
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    try {
+      const response = await fetch(`${endpoint}/api/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log(
+        'Generate API response status:',
+        response.status,
+        response.statusText,
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Generate API error response:', errorText);
+        throw new Error(
+          `HTTP ${response.status}: ${response.statusText} - ${errorText}`,
+        );
+      }
+
+      const data: OllamaResponse = await response.json();
+      console.log(
+        'Generate API success, response length:',
+        data.response?.length || 0,
+      );
+
+      if (!data.response) {
+        console.error('Generate API returned empty response:', data);
+        throw new Error('Empty response from Ollama /api/generate endpoint');
+      }
+
+      return data.response;
+    } catch (error) {
+      console.error('Generate API request failed:', error);
+      throw error;
     }
-
-    const data: OllamaResponse = await response.json();
-
-    if (!data.response) {
-      throw new Error('Empty response from Ollama API');
-    }
-
-    return data.response;
   }
 
   private async sendChatMessage(
@@ -161,67 +210,122 @@ class OllamaService {
       stream: false,
     };
 
-    const response = await fetch(`${endpoint}/api/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
+    console.log('Attempting Ollama /api/chat request:', {
+      endpoint: `${endpoint}/api/chat`,
+      model,
+      requestBody,
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    try {
+      const response = await fetch(`${endpoint}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log(
+        'Chat API response status:',
+        response.status,
+        response.statusText,
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Chat API error response:', errorText);
+        throw new Error(
+          `HTTP ${response.status}: ${response.statusText} - ${errorText}`,
+        );
+      }
+
+      interface ChatResponse {
+        model: string;
+        created_at: string;
+        message: {
+          role: string;
+          content: string;
+        };
+        done: boolean;
+        total_duration?: number;
+        load_duration?: number;
+        prompt_eval_count?: number;
+        prompt_eval_duration?: number;
+        eval_count?: number;
+        eval_duration?: number;
+      }
+
+      const data: ChatResponse = await response.json();
+      console.log(
+        'Chat API success, response length:',
+        data.message?.content?.length || 0,
+      );
+
+      if (!data.message?.content) {
+        console.error('Chat API returned empty response:', data);
+        throw new Error('Empty response from Ollama /api/chat endpoint');
+      }
+
+      return data.message.content;
+    } catch (error) {
+      console.error('Chat API request failed:', error);
+      throw error;
     }
-
-    interface ChatResponse {
-      model: string;
-      created_at: string;
-      message: {
-        role: string;
-        content: string;
-      };
-      done: boolean;
-      total_duration?: number;
-      load_duration?: number;
-      prompt_eval_count?: number;
-      prompt_eval_duration?: number;
-      eval_count?: number;
-      eval_duration?: number;
-    }
-
-    const data: ChatResponse = await response.json();
-
-    if (!data.message?.content) {
-      throw new Error('Empty response from Ollama API');
-    }
-
-    return data.message.content;
   }
 
   private handleOllamaError(error: unknown, model: string): never {
-    console.error('Ollama API error:', error);
+    console.error('Detailed Ollama API error:', {
+      error,
+      model,
+      errorType: typeof error,
+      errorString: String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
 
     const err = error as Error;
-    if (err.message?.includes('model') && err.message?.includes('not found')) {
+
+    // Enhanced error detection
+    if (
+      err.message?.toLowerCase().includes('model') &&
+      (err.message?.toLowerCase().includes('not found') ||
+        err.message?.toLowerCase().includes('not available'))
+    ) {
       throw new OllamaError({
-        message: `Model "${model}" not found. Please ensure the model is installed in Ollama.`,
+        message: `Model "${model}" not found. Please ensure the model is installed in Ollama. Error: ${err.message}`,
         type: 'model_not_found',
       });
     }
 
     if (
       err.message?.includes('NetworkError') ||
-      err.message?.includes('Failed to fetch')
+      err.message?.includes('Failed to fetch') ||
+      err.message?.includes('fetch is not defined') ||
+      err.message?.includes('ECONNREFUSED') ||
+      err.message?.includes('ENOTFOUND')
     ) {
       throw new OllamaError({
-        message:
-          'Network error. Please check if Ollama is running and accessible.',
+        message: `Network error connecting to Ollama server. Please check if Ollama is running and accessible. Error: ${err.message}`,
         type: 'network_error',
       });
     }
 
+    // Check for specific HTTP errors
+    if (err.message?.includes('404')) {
+      throw new OllamaError({
+        message: `API endpoint not found. This may indicate an incompatible Ollama version. Error: ${err.message}`,
+        type: 'api_error',
+      });
+    }
+
+    if (err.message?.includes('500') || err.message?.includes('503')) {
+      throw new OllamaError({
+        message: `Ollama server error. The server may be overloaded or encountering issues. Error: ${err.message}`,
+        type: 'api_error',
+      });
+    }
+
     throw new OllamaError({
-      message: err.message || 'Failed to get response from Ollama API',
+      message: `Unexpected error communicating with Ollama: ${err.message || 'Unknown error'}`,
       type: 'api_error',
     });
   }
@@ -231,10 +335,30 @@ class OllamaService {
       const testEndpoint = endpoint.endsWith('/')
         ? endpoint.slice(0, -1)
         : endpoint;
+
+      console.log('Validating Ollama connection:', `${testEndpoint}/api/tags`);
+
       const response = await fetch(`${testEndpoint}/api/tags`);
+
+      console.log('Connection validation response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Connection validation failed - response:', errorText);
+      }
+
       return response.ok;
     } catch (error) {
-      console.error('Ollama connection validation failed:', error);
+      console.error('Ollama connection validation failed:', {
+        endpoint,
+        error,
+        errorType: typeof error,
+        errorString: String(error),
+      });
       return false;
     }
   }
