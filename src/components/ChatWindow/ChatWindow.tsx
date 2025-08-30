@@ -41,6 +41,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
+      // Only send message when not in IME composition
+      if (e.nativeEvent.isComposing) {
+        return;
+      }
       e.preventDefault();
       handleSubmit(e);
     }
