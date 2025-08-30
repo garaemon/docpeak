@@ -7,6 +7,7 @@ import {useDictionary} from '../../hooks/useDictionary';
 import {useWordHighlight} from '../../hooks/useWordHighlight';
 import {usePDFTextExtraction} from '../../hooks/usePDFTextExtraction';
 import {useChat} from '../../hooks/useChat';
+import useHorizontalResizable from '../../hooks/useHorizontalResizable';
 import Sidebar from '../Sidebar';
 import SettingsModal from '../SettingsModal';
 import styles from './PDFViewer.module.css';
@@ -33,6 +34,16 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
   const [viewMode, setViewMode] = useState<'single' | 'all'>('all');
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+
+  const {
+    width: sidebarWidth,
+    isDragging,
+    handleMouseDown,
+  } = useHorizontalResizable({
+    initialWidth: 400,
+    minWidth: 300,
+    maxWidth: 600,
+  });
 
   const {hoveredWord} = useWordDetection();
   const {definition, loading, error, fetchDefinition, clearDefinition} =
@@ -162,7 +173,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
   }
 
   return (
-    <div className={styles.container}>
+    <div
+      className={styles.container}
+      style={{marginRight: `${sidebarWidth}px`}}
+    >
       <div className={styles.controls}>
         <button onClick={toggleViewMode} className={styles.viewModeButton}>
           {viewMode === 'all' ? 'Show Single Page' : 'Show All Pages'}
@@ -246,7 +260,16 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
         </Document>
       </div>
 
+      <div
+        className={`${styles.horizontalResizeHandle} ${isDragging ? styles.dragging : ''}`}
+        style={{right: `${sidebarWidth}px`}}
+        onMouseDown={handleMouseDown}
+      >
+        <div className={styles.horizontalResizeBar} />
+      </div>
+
       <Sidebar
+        width={sidebarWidth}
         definition={definition}
         loading={loading}
         error={error}
