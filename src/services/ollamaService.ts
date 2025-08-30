@@ -1,3 +1,5 @@
+import {promptService} from './promptService';
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -109,12 +111,7 @@ class OllamaService {
   ): Promise<string> {
     const endpoint = this.getEndpoint();
 
-    let prompt = message;
-    if (pdfContext) {
-      prompt = `PDF Context:\n${pdfContext.slice(0, 3000)}\n\nUser Question:\n${message}\n\nPlease answer the question based on the PDF content if relevant, or provide general English learning help if the question is not related to the PDF content.`;
-    } else {
-      prompt = `User Question:\n${message}\n\nPlease provide helpful English learning assistance.`;
-    }
+    const prompt = promptService.buildPrompt(message, pdfContext);
 
     // Try the generate endpoint first
     try {

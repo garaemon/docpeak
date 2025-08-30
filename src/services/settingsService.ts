@@ -1,4 +1,5 @@
 export type ProviderType = 'gemini' | 'ollama';
+export type LanguageType = 'en' | 'ja';
 
 export interface Model {
   id: string;
@@ -53,6 +54,7 @@ export interface AppSettings {
   selectedModel: string;
   providerType: ProviderType;
   ollamaEndpoint: string;
+  language: LanguageType;
 }
 
 class SettingsService {
@@ -71,6 +73,7 @@ class SettingsService {
           selectedModel: parsed.selectedModel || DEFAULT_GEMINI_MODEL.id,
           providerType: parsed.providerType || 'gemini',
           ollamaEndpoint: parsed.ollamaEndpoint || 'http://localhost:11434',
+          language: parsed.language || 'en',
         };
       }
     } catch (error) {
@@ -82,6 +85,7 @@ class SettingsService {
       selectedModel: DEFAULT_GEMINI_MODEL.id,
       providerType: 'gemini',
       ollamaEndpoint: 'http://localhost:11434',
+      language: 'en',
     };
   }
 
@@ -289,6 +293,19 @@ class SettingsService {
     }
 
     return await this.getOllamaModels();
+  }
+
+  getLanguage(): LanguageType {
+    const settings = this.loadSettings();
+    return settings.language;
+  }
+
+  updateLanguage(language: LanguageType): void {
+    const currentSettings = this.loadSettings();
+    this.saveSettings({
+      ...currentSettings,
+      language,
+    });
   }
 
   clearSettings(): void {
