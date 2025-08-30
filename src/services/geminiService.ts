@@ -58,7 +58,12 @@ class GeminiService {
     try {
       const genAI = this.getInitializedClient();
       const selectedModelId = settingsService.getSelectedModel();
-      const model = genAI.getGenerativeModel({model: selectedModelId});
+      const systemInstruction = promptService.getSystemPrompt();
+
+      const model = genAI.getGenerativeModel({
+        model: selectedModelId,
+        systemInstruction,
+      });
 
       const prompt = promptService.buildPrompt(message, pdfContext);
 
