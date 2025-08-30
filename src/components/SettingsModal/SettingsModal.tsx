@@ -1,9 +1,11 @@
 import React, {useState, useEffect} from 'react';
 import {
   settingsService,
-  AVAILABLE_GEMINI_MODELS,
+  ProviderType,
+  Model,
 } from '../../services/settingsService';
 import {geminiService} from '../../services/geminiService';
+import {ollamaService} from '../../services/ollamaService';
 import styles from './SettingsModal.module.css';
 
 interface SettingsModalProps {
@@ -19,46 +21,150 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const [apiKey, setApiKey] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
+  const [providerType, setProviderType] = useState<ProviderType>('gemini');
+  const [ollamaEndpoint, setOllamaEndpoint] = useState('');
+  const [availableModels, setAvailableModels] = useState<Model[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+
+  const loadModelsForProvider = async (provider: ProviderType) => {
+    setIsLoadingModels(true);
+    try {
+      const models =
+        await settingsService.getAvailableModelsForProviderAsync(provider);
+
+      console.log('loadModelsForProvider:', {
+        provider,
+        models,
+        modelsLength: models.length,
+      });
+
+      setAvailableModels(models);
+
+      // Set the first model as selected if no current selection or if switching providers
+      const currentSettings = settingsService.loadSettings();
+      const currentModelExists = models.find(
+        m => m.id === currentSettings.selectedModel,
+      );
+
+      console.log('Model selection logic:', {
+        currentSelectedModel: currentSettings.selectedModel,
+        currentModelExists: !!currentModelExists,
+        firstAvailableModel: models[0]?.id,
+      });
+
+      if (!currentModelExists && models.length > 0) {
+        console.log('Setting model to first available:', models[0].id);
+        setSelectedModel(models[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to load models:', error);
+      // Use fallback models
+      const fallbackModels =
+        settingsService.getAvailableModelsForProvider(provider);
+      console.log('Using fallback models:', fallbackModels);
+      setAvailableModels(fallbackModels);
+      if (fallbackModels.length > 0) {
+        setSelectedModel(fallbackModels[0].id);
+      }
+    } finally {
+      setIsLoadingModels(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
       const currentSettings = settingsService.loadSettings();
       setApiKey(currentSettings.geminiApiKey);
       setSelectedModel(currentSettings.selectedModel);
+      setProviderType(currentSettings.providerType);
+      setOllamaEndpoint(currentSettings.ollamaEndpoint);
       setValidationError(null);
       setIsSaved(false);
+
+      // Load models for the current provider
+      void loadModelsForProvider(currentSettings.providerType);
     }
   }, [isOpen]);
 
+  const handleProviderChange = (newProvider: ProviderType) => {
+    setProviderType(newProvider);
+    setValidationError(null);
+    void loadModelsForProvider(newProvider);
+  };
+
   const handleSave = async () => {
-    if (!apiKey.trim()) {
-      setValidationError('API key is required');
-      return;
+    if (providerType === 'gemini') {
+      if (!apiKey.trim()) {
+        setValidationError('API key is required');
+        return;
+      }
+
+      if (!apiKey.startsWith('AIza')) {
+        setValidationError(
+          'Invalid API key format. Gemini API keys should start with "AIza"',
+        );
+        return;
+      }
     }
 
-    if (!apiKey.startsWith('AIza')) {
-      setValidationError(
-        'Invalid API key format. Gemini API keys should start with "AIza"',
-      );
-      return;
+    if (providerType === 'ollama') {
+      if (!ollamaEndpoint.trim()) {
+        setValidationError('Ollama endpoint is required');
+        return;
+      }
+
+      try {
+        new URL(ollamaEndpoint);
+      } catch (error) {
+        setValidationError('Invalid endpoint URL format');
+        return;
+      }
     }
 
     setIsValidating(true);
     setValidationError(null);
 
     try {
-      const isValid = await geminiService.validateApiKey(apiKey.trim());
-
-      if (!isValid) {
-        setValidationError('Invalid API key. Please check and try again.');
-        return;
+      if (providerType === 'gemini') {
+        const isValid = await geminiService.validateApiKey(apiKey.trim());
+        if (!isValid) {
+          setValidationError('Invalid API key. Please check and try again.');
+          return;
+        }
+        settingsService.updateGeminiApiKey(apiKey.trim());
       }
 
-      settingsService.updateGeminiApiKey(apiKey.trim());
+      if (providerType === 'ollama') {
+        const isValid = await ollamaService.validateConnection(
+          ollamaEndpoint.trim(),
+        );
+        if (!isValid) {
+          setValidationError(
+            'Cannot connect to Ollama. Please check the endpoint and ensure Ollama is running.',
+          );
+          return;
+        }
+        ollamaService.setEndpoint(ollamaEndpoint.trim());
+        settingsService.updateOllamaEndpoint(ollamaEndpoint.trim());
+      }
+
+      console.log('Saving settings:', {
+        providerType,
+        selectedModel,
+        ollamaEndpoint:
+          providerType === 'ollama' ? ollamaEndpoint.trim() : 'N/A',
+      });
+
+      // Update provider first, then model
+      settingsService.updateProviderType(providerType);
       settingsService.updateSelectedModel(selectedModel);
+
+      const savedSettings = settingsService.loadSettings();
+      console.log('Settings after save:', savedSettings);
+
       setIsSaved(true);
 
       setTimeout(() => {
@@ -66,8 +172,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         onClose();
       }, 1000);
     } catch (error) {
-      console.error('Error validating API key:', error);
-      setValidationError('Failed to validate API key. Please try again.');
+      console.error('Error validating settings:', error);
+      setValidationError('Failed to validate settings. Please try again.');
     } finally {
       setIsValidating(false);
     }
@@ -109,53 +215,134 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
         <div className={styles.modalBody}>
           <div className={styles.formGroup}>
-            <label htmlFor="apiKey" className={styles.label}>
-              Gemini API Key
+            <label htmlFor="providerType" className={styles.label}>
+              AI Provider
             </label>
-            <input
-              id="apiKey"
-              type="password"
-              value={apiKey}
-              onChange={e => setApiKey(e.target.value)}
-              placeholder="Enter your Gemini API key (starts with AIza...)"
-              className={styles.input}
+            <select
+              id="providerType"
+              value={providerType}
+              onChange={e =>
+                handleProviderChange(e.target.value as ProviderType)
+              }
+              className={styles.select}
               disabled={isValidating}
-            />
+            >
+              <option value="gemini">Google Gemini</option>
+              <option value="ollama">Ollama (Local)</option>
+            </select>
             <div className={styles.helpText}>
-              Get your API key from{' '}
-              <a
-                href="https://makersuite.google.com/app/apikey"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.link}
-              >
-                Google AI Studio
-              </a>
+              {providerType === 'gemini'
+                ? 'Cloud-based Google Gemini models'
+                : 'Local AI models via Ollama'}
             </div>
           </div>
 
+          {providerType === 'gemini' && (
+            <div className={styles.formGroup}>
+              <label htmlFor="apiKey" className={styles.label}>
+                Gemini API Key
+              </label>
+              <input
+                id="apiKey"
+                type="password"
+                value={apiKey}
+                onChange={e => setApiKey(e.target.value)}
+                placeholder="Enter your Gemini API key (starts with AIza...)"
+                className={styles.input}
+                disabled={isValidating}
+              />
+              <div className={styles.helpText}>
+                Get your API key from{' '}
+                <a
+                  href="https://makersuite.google.com/app/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.link}
+                >
+                  Google AI Studio
+                </a>
+              </div>
+            </div>
+          )}
+
+          {providerType === 'ollama' && (
+            <div className={styles.formGroup}>
+              <label htmlFor="ollamaEndpoint" className={styles.label}>
+                Ollama Endpoint
+              </label>
+              <input
+                id="ollamaEndpoint"
+                type="url"
+                value={ollamaEndpoint}
+                onChange={e => setOllamaEndpoint(e.target.value)}
+                placeholder="http://localhost:11434"
+                className={styles.input}
+                disabled={isValidating}
+              />
+              <div className={styles.helpText}>
+                Make sure Ollama is running on your system. Install from{' '}
+                <a
+                  href="https://ollama.ai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.link}
+                >
+                  ollama.ai
+                </a>
+                {
+                  '. After installation, download models with: ollama pull llama3.2'
+                }
+              </div>
+            </div>
+          )}
+
           <div className={styles.formGroup}>
-            <label htmlFor="selectedModel" className={styles.label}>
-              AI Model
-            </label>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <label htmlFor="selectedModel" className={styles.label}>
+                AI Model
+              </label>
+              {providerType === 'ollama' && (
+                <button
+                  type="button"
+                  onClick={() => loadModelsForProvider('ollama')}
+                  disabled={isLoadingModels || isValidating}
+                  className={styles.refreshButton}
+                  title="Refresh model list"
+                >
+                  {isLoadingModels ? '⟳' : '↻'}
+                </button>
+              )}
+            </div>
             <select
               id="selectedModel"
               value={selectedModel}
               onChange={e => setSelectedModel(e.target.value)}
               className={styles.select}
-              disabled={isValidating}
+              disabled={isValidating || isLoadingModels}
             >
-              {AVAILABLE_GEMINI_MODELS.map(model => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                </option>
-              ))}
+              {isLoadingModels ? (
+                <option value="">Loading models...</option>
+              ) : (
+                availableModels.map(model => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))
+              )}
             </select>
             <div className={styles.helpText}>
-              {
-                AVAILABLE_GEMINI_MODELS.find(m => m.id === selectedModel)
-                  ?.description
-              }
+              {isLoadingModels
+                ? 'Loading available models...'
+                : availableModels.length === 0 && providerType === 'ollama'
+                  ? 'No models found. Install models using: ollama pull llama3.2'
+                  : availableModels.find(m => m.id === selectedModel)
+                      ?.description || 'No description available'}
             </div>
           </div>
 
