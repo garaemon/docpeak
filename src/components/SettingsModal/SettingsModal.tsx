@@ -2,10 +2,12 @@ import React, {useState, useEffect} from 'react';
 import {
   settingsService,
   ProviderType,
+  LanguageType,
   Model,
 } from '../../services/settingsService';
 import {geminiService} from '../../services/geminiService';
 import {ollamaService} from '../../services/ollamaService';
+import {useLanguage} from '../../contexts/LanguageContext';
 import styles from './SettingsModal.module.css';
 
 interface SettingsModalProps {
@@ -19,10 +21,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   onSave,
 }) => {
+  const {t, setLanguage: setContextLanguage} = useLanguage();
   const [apiKey, setApiKey] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
   const [providerType, setProviderType] = useState<ProviderType>('gemini');
   const [ollamaEndpoint, setOllamaEndpoint] = useState('');
+  const [language, setLanguage] = useState<LanguageType>('en');
   const [availableModels, setAvailableModels] = useState<Model[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
@@ -81,6 +85,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       setSelectedModel(currentSettings.selectedModel);
       setProviderType(currentSettings.providerType);
       setOllamaEndpoint(currentSettings.ollamaEndpoint);
+      setLanguage(currentSettings.language);
       setValidationError(null);
       setIsSaved(false);
 
@@ -158,9 +163,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           providerType === 'ollama' ? ollamaEndpoint.trim() : 'N/A',
       });
 
-      // Update provider first, then model
+      // Update provider first, then model and language
       settingsService.updateProviderType(providerType);
       settingsService.updateSelectedModel(selectedModel);
+      settingsService.updateLanguage(language);
 
       const savedSettings = settingsService.loadSettings();
       console.log('Settings after save:', savedSettings);
@@ -203,7 +209,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     >
       <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>Settings</h2>
+          <h2 className={styles.modalTitle}>{t('settings.title')}</h2>
           <button
             className={styles.closeButton}
             onClick={handleClose}
@@ -215,8 +221,29 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
         <div className={styles.modalBody}>
           <div className={styles.formGroup}>
+            <label htmlFor="language" className={styles.label}>
+              {t('settings.language')}
+            </label>
+            <select
+              id="language"
+              value={language}
+              onChange={e => {
+                const newLanguage = e.target.value as LanguageType;
+                setLanguage(newLanguage);
+                setContextLanguage(newLanguage);
+              }}
+              className={styles.select}
+              disabled={isValidating}
+            >
+              <option value="en">English</option>
+              <option value="ja">日本語</option>
+            </select>
+            <div className={styles.helpText}>{t('settings.languageHelp')}</div>
+          </div>
+
+          <div className={styles.formGroup}>
             <label htmlFor="providerType" className={styles.label}>
-              AI Provider
+              {t('settings.aiProvider')}
             </label>
             <select
               id="providerType"
@@ -240,7 +267,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           {providerType === 'gemini' && (
             <div className={styles.formGroup}>
               <label htmlFor="apiKey" className={styles.label}>
-                Gemini API Key
+                {t('settings.geminiApiKey')}
               </label>
               <input
                 id="apiKey"
@@ -268,7 +295,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           {providerType === 'ollama' && (
             <div className={styles.formGroup}>
               <label htmlFor="ollamaEndpoint" className={styles.label}>
-                Ollama Endpoint
+                {t('settings.ollamaEndpoint')}
               </label>
               <input
                 id="ollamaEndpoint"
@@ -305,7 +332,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               }}
             >
               <label htmlFor="selectedModel" className={styles.label}>
-                AI Model
+                {t('settings.aiModel')}
               </label>
               {providerType === 'ollama' && (
                 <button
@@ -363,7 +390,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             onClick={handleClose}
             disabled={isValidating}
           >
-            Cancel
+            {t('settings.cancel')}
           </button>
           <button
             className={styles.saveButton}
@@ -373,12 +400,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             {isValidating ? (
               <>
                 <span className={styles.spinner}></span>
-                Validating...
+                {t('settings.validating')}
               </>
             ) : isSaved ? (
-              'Saved!'
+              t('settings.saved')
             ) : (
-              'Save'
+              t('settings.save')
             )}
           </button>
         </div>

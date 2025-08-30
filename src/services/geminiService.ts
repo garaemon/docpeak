@@ -1,5 +1,6 @@
 import {GoogleGenerativeAI} from '@google/generative-ai';
 import {settingsService} from './settingsService';
+import {promptService} from './promptService';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -57,14 +58,14 @@ class GeminiService {
     try {
       const genAI = this.getInitializedClient();
       const selectedModelId = settingsService.getSelectedModel();
-      const model = genAI.getGenerativeModel({model: selectedModelId});
+      const systemInstruction = promptService.getSystemPrompt();
 
-      let prompt = message;
-      if (pdfContext) {
-        prompt = `PDF Context:\n${pdfContext.slice(0, 3000)}\n\nUser Question:\n${message}\n\nPlease answer the question based on the PDF content if relevant, or provide general English learning help if the question is not related to the PDF content.`;
-      } else {
-        prompt = `User Question:\n${message}\n\nPlease provide helpful English learning assistance.`;
-      }
+      const model = genAI.getGenerativeModel({
+        model: selectedModelId,
+        systemInstruction,
+      });
+
+      const prompt = promptService.buildPrompt(message, pdfContext);
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
