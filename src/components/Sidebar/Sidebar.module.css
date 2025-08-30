@@ -1,5 +1,4 @@
 .sidebar {
-  width: 320px;
   height: 100vh;
   background: #f8f9fa;
   border-left: 1px solid #e9ecef;
@@ -15,18 +14,18 @@
 }
 
 .dictionarySection {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: 200px;
   border-bottom: 1px solid #e9ecef;
+  background: #f8f9fa;
 }
 
 .chatSection {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: 200px;
   background: #ffffff;
 }
 
@@ -219,4 +218,44 @@
   color: #2c3e50;
   flex: 1;
   font-size: 15px;
+}
+
+/* Resize Handle Styles */
+.resizeHandle {
+  height: 8px;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  border-bottom: 1px solid #e9ecef;
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.resizeHandle:hover {
+  background: #e9ecef;
+}
+
+.resizeHandle.dragging {
+  background: #dee2e6;
+}
+
+.resizeBar {
+  width: 40px;
+  height: 2px;
+  background: #adb5bd;
+  border-radius: 1px;
+  transition: all 0.2s ease;
+}
+
+.resizeHandle:hover .resizeBar {
+  background: #6c757d;
+  width: 60px;
+}
+
+.resizeHandle.dragging .resizeBar {
+  background: #495057;
+  width: 80px;
 }

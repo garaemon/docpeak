@@ -2,9 +2,11 @@ import React from 'react';
 import {WordDefinition} from '../../services/dictionaryService';
 import {ChatMessage} from '../../services/geminiService';
 import ChatWindow from '../ChatWindow';
+import useResizable from '../../hooks/useResizable';
 import styles from './Sidebar.module.css';
 
 interface SidebarProps {
+  width: number;
   definition: WordDefinition | null;
   loading: boolean;
   error: string | null;
@@ -19,6 +21,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
+  width,
   definition,
   loading,
   error,
@@ -31,9 +34,22 @@ const Sidebar: React.FC<SidebarProps> = ({
   onClearChatError,
   onOpenSettings,
 }) => {
+  const {
+    height: dictionaryHeight,
+    isDragging,
+    handleMouseDown,
+  } = useResizable({
+    initialHeight: window.innerHeight / 2,
+    minHeight: 200,
+    maxHeight: window.innerHeight - 200,
+  });
+
   return (
-    <div className={styles.sidebar}>
-      <div className={styles.dictionarySection}>
+    <div className={styles.sidebar} style={{width: `${width}px`}}>
+      <div
+        className={styles.dictionarySection}
+        style={{height: `${dictionaryHeight}px`}}
+      >
         <div className={styles.header}>
           <h2 className={styles.title}>Dictionary</h2>
         </div>
@@ -95,6 +111,13 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
         </div>
+      </div>
+
+      <div
+        className={`${styles.resizeHandle} ${isDragging ? styles.dragging : ''}`}
+        onMouseDown={handleMouseDown}
+      >
+        <div className={styles.resizeBar} />
       </div>
 
       <div className={styles.chatSection}>

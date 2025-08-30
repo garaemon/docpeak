@@ -2,8 +2,8 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  margin-right: 320px; /* Make space for sidebar */
   background-color: #f5f5f5;
+  position: relative;
 }
 
 .controls {
@@ -258,4 +258,47 @@
   .documentContainer {
     padding: 1rem;
   }
+}
+
+/* Horizontal Resize Handle Styles */
+.horizontalResizeHandle {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  background: #f8f9fa;
+  border-left: 1px solid #e9ecef;
+  border-right: 1px solid #e9ecef;
+  cursor: ew-resize;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.horizontalResizeHandle:hover {
+  background: #e9ecef;
+}
+
+.horizontalResizeHandle.dragging {
+  background: #dee2e6;
+}
+
+.horizontalResizeBar {
+  height: 40px;
+  width: 2px;
+  background: #adb5bd;
+  border-radius: 1px;
+  transition: all 0.2s ease;
+}
+
+.horizontalResizeHandle:hover .horizontalResizeBar {
+  background: #6c757d;
+  height: 60px;
+}
+
+.horizontalResizeHandle.dragging .horizontalResizeBar {
+  background: #495057;
+  height: 80px;
 }

@@ -92,3 +92,4 @@ docpeak/
 - Avoid class inheritance (except when required by libraries)
 - Don't implement many features at once - work incrementally
 - Always compile and test after modifications
+- Check linter and fix the linter errorr before making pull requests
