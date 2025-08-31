@@ -1,6 +1,7 @@
 import React from 'react';
 import {WordDefinition} from '../../services/dictionaryService';
 import {ChatMessage} from '../../services/geminiService';
+import {settingsService} from '../../services/settingsService';
 import ChatWindow from '../ChatWindow';
 import useResizable from '../../hooks/useResizable';
 import styles from './Sidebar.module.css';
@@ -43,6 +44,19 @@ const Sidebar: React.FC<SidebarProps> = ({
     minHeight: 200,
     maxHeight: window.innerHeight - 200,
   });
+
+  // Get current AI model information
+  const settings = settingsService.loadSettings();
+  const currentModel = settingsService
+    .getAvailableModelsForProvider(settings.providerType)
+    .find(model => model.id === settings.selectedModel);
+
+  const baseModelName =
+    currentModel?.name || settings.selectedModel || 'Unknown Model';
+  const modelDisplayName =
+    settings.providerType === 'ollama'
+      ? `Ollama - ${baseModelName}`
+      : baseModelName;
 
   return (
     <div className={styles.sidebar} style={{width: `${width}px`}}>
@@ -122,6 +136,10 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       <div className={styles.chatSection}>
         <div className={styles.chatHeader}>
+          <div className={styles.aiModelInfo}>
+            <span className={styles.aiModelLabel}>AI Model:</span>
+            <span className={styles.aiModelName}>{modelDisplayName}</span>
+          </div>
           <button
             className={styles.settingsButton}
             onClick={onOpenSettings}
