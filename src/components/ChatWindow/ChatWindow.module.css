@@ -266,3 +266,51 @@
   background-color: #ccc;
   cursor: not-allowed;
 }
+
+/* Markdown content styling */
+.markdownContent {
+  padding: 0 !important;
+  background: none !important;
+  border-radius: 0 !important;
+  color: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+.assistantMessage .markdownContent {
+  /* Override markdown renderer defaults for chat context */
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.markdownContent h1,
+.markdownContent h2,
+.markdownContent h3,
+.markdownContent h4,
+.markdownContent h5,
+.markdownContent h6 {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdownContent p:first-child {
+  margin-top: 0;
+}
+
+.markdownContent p:last-child {
+  margin-bottom: 0;
+}
+
+.markdownContent pre {
+  margin: 0.5rem 0;
+  font-size: 0.8rem;
+}
+
+.markdownContent ul,
+.markdownContent ol {
+  margin: 0.5rem 0;
+}
+
+.markdownContent blockquote {
+  margin: 0.5rem 0;
+}

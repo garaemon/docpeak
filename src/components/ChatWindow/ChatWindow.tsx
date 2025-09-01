@@ -1,5 +1,6 @@
 import React, {useState, useRef, useEffect} from 'react';
 import {ChatMessage} from '../../services/geminiService';
+import MarkdownRenderer from '../MarkdownRenderer';
 import styles from './ChatWindow.module.css';
 
 interface ChatWindowProps {
@@ -88,14 +89,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           >
             <div className={styles.messageContent}>
               <div className={styles.messageText}>
-                {message.content.split('\n').map((line, lineIndex) => (
-                  <React.Fragment key={lineIndex}>
-                    {line}
-                    {lineIndex < message.content.split('\n').length - 1 && (
-                      <br />
-                    )}
-                  </React.Fragment>
-                ))}
+                {message.role === 'user' ? (
+                  message.content.split('\n').map((line, lineIndex) => (
+                    <React.Fragment key={lineIndex}>
+                      {line}
+                      {lineIndex < message.content.split('\n').length - 1 && (
+                        <br />
+                      )}
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <MarkdownRenderer
+                    content={message.content}
+                    className={styles.markdownContent}
+                  />
+                )}
               </div>
               <div className={styles.messageTime}>
                 {formatTimestamp(message.timestamp)}
