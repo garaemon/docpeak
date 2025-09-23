@@ -63,6 +63,14 @@
       "last 1 safari version"
     ]
   },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!(react-markdown|rehype-highlight|remark-.*|rehype-.*|vfile.*|unist-.*|micromark.*|mdast-.*|hast-.*|property-information|space-separated-tokens|comma-separated-tokens|web-namespaces|devlop)/)"
+    ],
+    "moduleNameMapper": {
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy"
+    }
+  },
   "devDependencies": {
     "@types/node": "^22.7.5",
     "concurrently": "^9.2.0",
@@ -70,6 +78,7 @@
     "electron": "^37.3.1",
     "electron-builder": "^26.0.12",
     "gts": "^6.0.2",
+    "identity-obj-proxy": "^3.0.0",
     "typescript": "~5.1.0",
     "wait-on": "^8.0.4"
   },
