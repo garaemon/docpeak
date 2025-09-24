@@ -1,6 +1,7 @@
 import React, {useEffect} from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
+import remarkGfm from 'remark-gfm';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism.css';
 import 'prismjs/components/prism-javascript';
@@ -29,6 +30,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   return (
     <div className={`${styles.markdownRenderer} ${className}`}>
       <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}
         components={{
           h1: ({children}) => <h1 className={styles.heading1}>{children}</h1>,
