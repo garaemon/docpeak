@@ -266,3 +266,76 @@
   background-color: #ccc;
   cursor: not-allowed;
 }
+
+/* Markdown content styling */
+.markdownContent {
+  padding: 0 !important;
+  background: none !important;
+  border-radius: 0 !important;
+  color: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  white-space: normal !important;
+}
+
+.assistantMessage .markdownContent {
+  /* Override markdown renderer defaults for chat context */
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.markdownContent h1,
+.markdownContent h2,
+.markdownContent h3,
+.markdownContent h4,
+.markdownContent h5,
+.markdownContent h6 {
+  margin-top: 0.4rem;
+  margin-bottom: 0.1rem;
+}
+
+.markdownContent h1:first-child,
+.markdownContent h2:first-child,
+.markdownContent h3:first-child,
+.markdownContent h4:first-child,
+.markdownContent h5:first-child,
+.markdownContent h6:first-child {
+  margin-top: 0;
+}
+
+.markdownContent p:first-child {
+  margin-top: 0;
+}
+
+.markdownContent p:last-child {
+  margin-bottom: 0;
+}
+
+.markdownContent pre {
+  margin: 0.25rem 0;
+  font-size: 0.8rem;
+}
+
+.markdownContent ul,
+.markdownContent ol {
+  margin: 0.25rem 0;
+  padding-left: 1rem;
+}
+
+.markdownContent li {
+  margin: 0.1rem 0;
+}
+
+.markdownContent blockquote {
+  margin: 0.25rem 0;
+}
+
+.markdownContent p {
+  margin: 0.15rem 0;
+}
+
+.markdownContent p:empty {
+  margin: 0;
+  height: 0;
+  line-height: 0;
+}

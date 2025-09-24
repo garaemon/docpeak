@@ -10,15 +10,20 @@
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.126",
+    "@types/prismjs": "^1.26.5",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@types/react-pdf": "^6.2.0",
     "electron-is-dev": "^3.0.1",
     "pdfjs-dist": "^5.4.54",
+    "prismjs": "^1.30.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-markdown": "^10.1.0",
     "react-pdf": "^10.1.0",
     "react-scripts": "5.0.1",
+    "rehype-highlight": "^7.0.2",
+    "remark-gfm": "^4.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -59,6 +64,14 @@
       "last 1 safari version"
     ]
   },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!(react-pdf)/)"
+    ],
+    "moduleNameMapper": {
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy"
+    }
+  },
   "devDependencies": {
     "@types/node": "^22.7.5",
     "concurrently": "^9.2.0",
@@ -66,6 +79,7 @@
     "electron": "^37.3.1",
     "electron-builder": "^26.0.12",
     "gts": "^6.0.2",
+    "identity-obj-proxy": "^3.0.0",
     "typescript": "~5.1.0",
     "wait-on": "^8.0.4"
   },
@@ -90,7 +104,6 @@
     },
     "linux": {
       "icon": "assets/icon.png"
-    },
-    "typescript": "~5.1.0"
+    }
   }
 }

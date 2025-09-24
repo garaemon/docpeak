@@ -14,3 +14,28 @@ jest.mock('react-pdf', () => ({
     },
   },
 }));
+
+// Mock react-markdown and related dependencies for Jest tests
+jest.mock('react-markdown', () => {
+  const mockReact = require('react');
+  return function ReactMarkdown({children}: {children: string}) {
+    return mockReact.createElement('div', {}, children);
+  };
+});
+
+jest.mock('remark-gfm', () => () => {});
+jest.mock('rehype-highlight', () => () => {});
+
+// Mock Prism for highlighting
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(global as any).Prism = {};
+jest.mock('prismjs', () => ({}));
+jest.mock('prismjs/components/prism-javascript', () => ({}));
+jest.mock('prismjs/components/prism-typescript', () => ({}));
+jest.mock('prismjs/components/prism-python', () => ({}));
+jest.mock('prismjs/components/prism-json', () => ({}));
+jest.mock('prismjs/components/prism-bash', () => ({}));
+jest.mock('prismjs/components/prism-css', () => ({}));
+jest.mock('prismjs/components/prism-markup', () => ({}));
+jest.mock('prismjs/components/prism-markdown', () => ({}));
+jest.mock('rehype-highlight', () => () => () => {});
