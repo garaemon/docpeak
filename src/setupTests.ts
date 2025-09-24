@@ -15,13 +15,16 @@ jest.mock('react-pdf', () => ({
   },
 }));
 
-// Mock react-markdown for Jest tests
+// Mock react-markdown and related dependencies for Jest tests
 jest.mock('react-markdown', () => {
   const mockReact = require('react');
   return function ReactMarkdown({children}: {children: string}) {
     return mockReact.createElement('div', {}, children);
   };
 });
+
+jest.mock('remark-gfm', () => () => {});
+jest.mock('rehype-highlight', () => () => {});
 
 // Mock Prism for highlighting
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
