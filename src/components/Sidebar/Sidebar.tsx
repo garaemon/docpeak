@@ -75,13 +75,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
 
-          {loading && (
-            <div className={styles.loading}>
-              <div className={styles.spinner}></div>
-              <p>Loading definition...</p>
-            </div>
-          )}
-
           {error && hoveredWord && (
             <div className={styles.errorWithWord}>
               <div className={styles.searchedWord}>
