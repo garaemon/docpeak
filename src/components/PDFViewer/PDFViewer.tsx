@@ -48,7 +48,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
   const {hoveredWord} = useWordDetection();
   const {definition, loading, error, fetchDefinition, clearDefinition} =
     useDictionary();
-  const {highlightWord, clearHighlights} = useWordHighlight();
+  const {highlightWord, clearHighlights, invalidateCache} = useWordHighlight();
 
   const {contextualText} = usePDFTextExtraction(
     fileUrl,
@@ -79,12 +79,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
   const goToPreviousPage = useCallback(() => {
     setPageNumber(prev => Math.max(prev - 1, 1));
     clearHighlights();
-  }, [clearHighlights]);
+    invalidateCache();
+  }, [clearHighlights, invalidateCache]);
 
   const goToNextPage = useCallback(() => {
     setPageNumber(prev => Math.min(prev + 1, numPages));
     clearHighlights();
-  }, [numPages, clearHighlights]);
+    invalidateCache();
+  }, [numPages, clearHighlights, invalidateCache]);
 
   const zoomIn = useCallback(() => {
     setScale(prev => Math.min(prev + 0.1, 3.0));
@@ -111,7 +113,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
   const toggleViewMode = useCallback(() => {
     setViewMode(prev => (prev === 'single' ? 'all' : 'single'));
     clearHighlights();
-  }, [clearHighlights]);
+    invalidateCache();
+  }, [clearHighlights, invalidateCache]);
 
   useEffect(() => {
     if (hoveredWord) {
