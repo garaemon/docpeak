@@ -85,24 +85,22 @@ export const useWordDetection = () => {
       // Update current element reference
       currentElementRef.current = textElement;
 
-      // Debounce the word detection to prevent flickering
-      debounceTimeoutRef.current = setTimeout(() => {
-        const wordInfo = extractWordAtPosition(event);
+      // Immediate word detection without debounce
+      const wordInfo = extractWordAtPosition(event);
 
-        if (wordInfo) {
-          currentWordRef.current = wordInfo.word;
-          // Only update if the word has actually changed
-          setHoveredWord(prevWord => {
-            if (prevWord?.word !== wordInfo.word) {
-              return wordInfo;
-            }
-            return prevWord;
-          });
-        } else {
-          currentWordRef.current = null;
-          setHoveredWord(null);
-        }
-      }, 50); // Reduced debounce time for better responsiveness
+      if (wordInfo) {
+        currentWordRef.current = wordInfo.word;
+        // Only update if the word has actually changed
+        setHoveredWord(prevWord => {
+          if (prevWord?.word !== wordInfo.word) {
+            return wordInfo;
+          }
+          return prevWord;
+        });
+      } else {
+        currentWordRef.current = null;
+        setHoveredWord(null);
+      }
     },
     [extractWordAtPosition],
   );
@@ -168,6 +166,31 @@ const isEnglishWord = (text: string): boolean => {
   return englishWordRegex.test(cleanedText) && cleanedText.length > 1;
 };
 
+// Reusable measurement element for performance
+let measurementDiv: HTMLDivElement | null = null;
+let lastElementStyle = '';
+
+const getMeasurementDiv = (element: HTMLElement): HTMLDivElement => {
+  const currentStyle = window.getComputedStyle(element).font;
+
+  if (!measurementDiv) {
+    measurementDiv = document.createElement('div');
+    measurementDiv.style.visibility = 'hidden';
+    measurementDiv.style.position = 'absolute';
+    measurementDiv.style.whiteSpace = 'nowrap';
+    measurementDiv.style.pointerEvents = 'none';
+    document.body.appendChild(measurementDiv);
+  }
+
+  // Only update styles if they changed
+  if (lastElementStyle !== currentStyle) {
+    measurementDiv.style.font = currentStyle;
+    lastElementStyle = currentStyle;
+  }
+
+  return measurementDiv;
+};
+
 const findWordAtMousePosition = (
   element: HTMLElement,
   text: string,
@@ -179,55 +202,41 @@ const findWordAtMousePosition = (
   width: number;
   height: number;
 } | null => {
-  // Create a temporary element to measure individual words
-  const tempDiv = document.createElement('div');
-  tempDiv.style.visibility = 'hidden';
-  tempDiv.style.position = 'absolute';
-  tempDiv.style.whiteSpace = 'nowrap';
-  tempDiv.style.font = window.getComputedStyle(element).font;
-  tempDiv.style.fontSize = window.getComputedStyle(element).fontSize;
-  tempDiv.style.fontFamily = window.getComputedStyle(element).fontFamily;
-  tempDiv.style.fontWeight = window.getComputedStyle(element).fontWeight;
-  document.body.appendChild(tempDiv);
-
+  const tempDiv = getMeasurementDiv(element);
   const elementRect = element.getBoundingClientRect();
   const relativeX = mouseX - elementRect.left;
 
   const words = text.split(/(\s+)/); // Keep whitespace
   let accumulatedWidth = 0;
 
-  try {
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i];
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
 
-      // Skip whitespace
-      if (/^\s+$/.test(word)) {
-        tempDiv.textContent = word;
-        accumulatedWidth += tempDiv.getBoundingClientRect().width;
-        continue;
-      }
-
+    // Skip whitespace
+    if (/^\s+$/.test(word)) {
       tempDiv.textContent = word;
-      const wordWidth = tempDiv.getBoundingClientRect().width;
-
-      // Check if mouse is over this word
-      if (
-        relativeX >= accumulatedWidth &&
-        relativeX <= accumulatedWidth + wordWidth
-      ) {
-        return {
-          word: word.trim(),
-          x: elementRect.left + accumulatedWidth,
-          y: elementRect.top,
-          width: wordWidth,
-          height: elementRect.height,
-        };
-      }
-
-      accumulatedWidth += wordWidth;
+      accumulatedWidth += tempDiv.getBoundingClientRect().width;
+      continue;
     }
-  } finally {
-    document.body.removeChild(tempDiv);
+
+    tempDiv.textContent = word;
+    const wordWidth = tempDiv.getBoundingClientRect().width;
+
+    // Check if mouse is over this word
+    if (
+      relativeX >= accumulatedWidth &&
+      relativeX <= accumulatedWidth + wordWidth
+    ) {
+      return {
+        word: word.trim(),
+        x: elementRect.left + accumulatedWidth,
+        y: elementRect.top,
+        width: wordWidth,
+        height: elementRect.height,
+      };
+    }
+
+    accumulatedWidth += wordWidth;
   }
 
   return null;

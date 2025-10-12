@@ -6,5 +6,9 @@
   },
   "rules": {
     "n/no-unsupported-features/node-builtins": "off"
-  }
+  },
+  "ignorePatterns": [
+    "playwright.config.ts",
+    "tests/**/*.ts"
+  ]
 }

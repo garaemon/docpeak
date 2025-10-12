@@ -1,4 +1,4 @@
-import {useEffect, useCallback} from 'react';
+import {useEffect, useCallback, useRef} from 'react';
 import styles from '../components/PDFViewer/PDFViewer.module.css';
 
 interface WordPosition {
@@ -9,30 +9,59 @@ interface WordPosition {
   height: number;
 }
 
+// Cache for text spans to avoid repeated querySelectorAll
+let cachedTextSpans: HTMLElement[] = [];
+let cacheInvalidated = true;
+
 export const useWordHighlight = () => {
-  const highlightWord = useCallback((wordInfo: WordPosition | null) => {
-    // Remove existing highlights
-    clearHighlights();
+  const animationFrameRef = useRef<number | null>(null);
 
-    if (!wordInfo) return;
-
-    // Use a small delay to ensure PDF text layer is rendered
-    setTimeout(() => {
-      // Find all text spans in the PDF
+  const updateCache = useCallback(() => {
+    if (cacheInvalidated) {
       const textSpans = document.querySelectorAll(
         '.react-pdf__Page__textContent span',
       );
-
-      textSpans.forEach(span => {
-        const text = span.textContent?.trim() || '';
-        if (text) {
-          addHighlightOverlay(span as HTMLElement, text, wordInfo.word);
-        }
-      });
-    }, 50);
+      cachedTextSpans = Array.from(textSpans) as HTMLElement[];
+      cacheInvalidated = false;
+    }
   }, []);
 
+  const highlightWord = useCallback(
+    (wordInfo: WordPosition | null) => {
+      // Cancel any pending animation frame
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+
+      // Remove existing highlights
+      clearHighlights();
+
+      if (!wordInfo) return;
+
+      // Use requestAnimationFrame for immediate rendering without blocking
+      animationFrameRef.current = requestAnimationFrame(() => {
+        // Update cache if needed
+        updateCache();
+
+        // Use cached text spans
+        cachedTextSpans.forEach(span => {
+          const text = span.textContent?.trim() || '';
+          if (text) {
+            addHighlightOverlay(span, text, wordInfo.word);
+          }
+        });
+      });
+    },
+    [updateCache],
+  );
+
   const clearHighlights = useCallback(() => {
+    // Cancel any pending animation frame
+    if (animationFrameRef.current !== null) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+
     // Remove all highlight overlays
     const highlightOverlays = document.querySelectorAll(
       '.word-highlight-overlay',
@@ -42,16 +71,24 @@ export const useWordHighlight = () => {
     });
   }, []);
 
+  const invalidateCache = useCallback(() => {
+    cacheInvalidated = true;
+  }, []);
+
   // Clean up highlights when component unmounts
   useEffect(() => {
     return () => {
       clearHighlights();
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
   }, [clearHighlights]);
 
   return {
     highlightWord,
     clearHighlights,
+    invalidateCache,
   };
 };
 
