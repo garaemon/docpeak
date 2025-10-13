@@ -9,7 +9,6 @@ import styles from './Sidebar.module.css';
 interface SidebarProps {
   width: number;
   definition: WordDefinition | null;
-  loading: boolean;
   error: string | null;
   hoveredWord: string | null;
   chatMessages: ChatMessage[];
@@ -24,7 +23,6 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({
   width,
   definition,
-  loading,
   error,
   hoveredWord,
   chatMessages,
@@ -69,16 +67,9 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <div className={styles.content}>
-          {!hoveredWord && !loading && !error && (
+          {!hoveredWord && !error && (
             <div className={styles.placeholder}>
               <p>Hover over an English word to see its definition</p>
-            </div>
-          )}
-
-          {loading && (
-            <div className={styles.loading}>
-              <div className={styles.spinner}></div>
-              <p>Loading definition...</p>
             </div>
           )}
 

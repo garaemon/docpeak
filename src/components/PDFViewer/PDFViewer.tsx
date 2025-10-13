@@ -46,8 +46,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
   });
 
   const {hoveredWord} = useWordDetection();
-  const {definition, loading, error, fetchDefinition, clearDefinition} =
-    useDictionary();
+  const {definition, error, fetchDefinition, clearDefinition} = useDictionary();
   const {highlightWord, clearHighlights, invalidateCache} = useWordHighlight();
 
   const {contextualText} = usePDFTextExtraction(
@@ -274,7 +273,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({fileUrl}) => {
       <Sidebar
         width={sidebarWidth}
         definition={definition}
-        loading={loading}
         error={error}
         hoveredWord={hoveredWord?.word || null}
         chatMessages={chatMessages}

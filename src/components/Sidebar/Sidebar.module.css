@@ -83,7 +83,7 @@
 }
 
 .header {
-  padding: 20px;
+  padding: 10px 12px;
   background: #ffffff;
   border-bottom: 1px solid #e9ecef;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -91,25 +91,25 @@
 
 .title {
   margin: 0;
-  font-size: 20px;
+  font-size: 14px;
   font-weight: 600;
   color: #2c3e50;
 }
 
 .content {
   flex: 1;
-  padding: 20px;
+  padding: 12px;
   overflow-y: auto;
 }
 
 .placeholder {
   text-align: center;
   color: #6c757d;
-  margin-top: 60px;
+  margin-top: 40px;
 }
 
 .placeholder p {
-  font-size: 16px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -148,15 +148,15 @@
 
 .errorWithWord {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 8px;
+  padding: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border: 1px solid #e9ecef;
 }
 
 .searchedWord {
-  margin-bottom: 16px;
-  padding-bottom: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
   border-bottom: 1px solid #e9ecef;
 }
 
@@ -169,21 +169,21 @@
 
 .definitionContainer {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 8px;
+  padding: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border: 1px solid #e9ecef;
 }
 
 .wordHeader {
-  margin-bottom: 16px;
-  padding-bottom: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
   border-bottom: 1px solid #e9ecef;
 }
 
 .word {
-  margin: 0 0 8px 0;
-  font-size: 24px;
+  margin: 0 0 6px 0;
+  font-size: 18px;
   font-weight: 700;
   color: #2c3e50;
 }
@@ -197,23 +197,23 @@
 .phonetics {
   font-style: italic;
   color: #6c757d;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .partOfSpeech {
   color: #3498db;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   background: #e3f2fd;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 2px 6px;
+  border-radius: 3px;
   display: inline-block;
   width: fit-content;
 }
 
 .definitionsTitle {
-  margin: 0 0 12px 0;
-  font-size: 16px;
+  margin: 0 0 8px 0;
+  font-size: 13px;
   font-weight: 600;
   color: #495057;
 }
@@ -221,27 +221,27 @@
 .definitions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .definition {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: flex-start;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .definitionNumber {
   color: #6c757d;
   font-weight: 600;
-  min-width: 20px;
-  font-size: 14px;
+  min-width: 18px;
+  font-size: 12px;
 }
 
 .definitionText {
   color: #2c3e50;
   flex: 1;
-  font-size: 15px;
+  font-size: 13px;
 }
 
 /* Resize Handle Styles */
